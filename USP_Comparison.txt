@@ -1,0 +1,38 @@
+COMPETITIVE ANALYSIS & USP (Why Us?)
+==================================
+
+User Question: "Why use this when Zapier & HubSpot exist?"
+Answer: We are the "Apple" approach (Simple) vs their "Lego" approach (Complex).
+
+1. VS ZAPIER (The "Connector")
+------------------------------
+*   **The Problem with Zapier:**
+    *   Zapier is just a "Pipe". It moves data from A to B. It doesn't STORE leads.
+    *   To use Zapier, you still need a CRM (Google Sheets, HubSpot, etc.).
+    *   **Cost:** Zapier ($30/mo) + CRM ($50/mo) + WhatsApp API ($50/mo) = Expensive stack.
+    *   **Complexity:** Setting up a Zap requires technical skill ("If this, then that").
+*   **Our Advantage:**
+    *   **All-in-One:** We Capture + Store + Analyze + Automate. No extra tools needed.
+    *   **Zero Setup:** User just clicks "Connect Facebook". No building workflows.
+
+2. VS HUBSPOT (The "Giant")
+---------------------------
+*   **The Problem with HubSpot:**
+    *   **Overkill:** HubSpot is built for massive enterprises. It has 1,000 features a small gym owner or dentist doesn't need.
+    *   **Learning Curve:** You need a certification just to use it properly.
+    *   **Cost:** Starts free, but reliable automation quickly jumps to $800/month.
+*   **Our Advantage:**
+    *   **Niche Focus:** We do ONE thing perfectly: Facebook Leads -> Instant Response.
+    *   **Simplicity:** A non-tech business owner can understand our dashboard in 10 seconds.
+
+3. THE "SWEET SPOT" (Our Market)
+--------------------------------
+We are targeting the "underserved middle":
+*   **Freelancers, Real Estate Agents, Gyms, Dentists, Coaching Institutes.**
+*   They find Zapier too "techy".
+*   They find HubSpot too "heavy/expensive".
+*   **They want:** "Just give me my leads and send them a WhatsApp message automatically."
+
+SUMMARY PITCH:
+"Zapier joins tools together. HubSpot runs giant companies.
+We simply help small businesses close their Facebook leads instantly."
