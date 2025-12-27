@@ -12,6 +12,7 @@ import Billing from './pages/Billing';
 import Workflows from './pages/Workflows';
 import WorkflowBuilder from './pages/WorkflowBuilder';
 import OAuthCallback from './pages/OAuthCallback';
+import Tasks from './pages/Tasks';
 
 const PrivateRoute = ({ children }) => {
     const token = localStorage.getItem('token');
@@ -56,6 +57,11 @@ export default function App() {
                 <Route path="/workflows" element={
                     <PrivateRoute>
                         <Workflows />
+                    </PrivateRoute>
+                } />
+                <Route path="/tasks" element={
+                    <PrivateRoute>
+                        <Tasks />
                     </PrivateRoute>
                 } />
                 <Route path="/workflows/:id" element={

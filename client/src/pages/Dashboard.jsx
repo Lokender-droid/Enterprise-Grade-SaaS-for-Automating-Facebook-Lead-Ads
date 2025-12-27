@@ -1,14 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import io from 'socket.io-client';
-import { getLeads, logout, updateLeadStatus, getTeam, createUser, assignLead, deleteLead, deleteLeads, getAnalytics, getSettings } from '../services/api';
+import { getLeads, logout, updateLeadStatus, getTeam, createUser, assignLead, deleteLead, deleteLeads, getAnalytics, getSettings, getStages } from '../services/api';
 import { useNavigate, Link } from 'react-router-dom';
 import {
     Users,
     Mail,
     MessageSquare,
-    Settings as SettingsIcon,
-    LogOut,
-    Filter,
+    LayoutDashboard,
+    ArrowUpRight,
+    MoreHorizontal,
+    LayoutList,
+    LayoutGrid,
+
+    CheckCircle,
+    Trophy,
     Download,
     Trash2,
     Search,
@@ -16,20 +21,31 @@ import {
     Plus,
     Shield,
     RefreshCw,
-    CheckCircle,
     XCircle,
     Clock,
     CreditCard,
     TrendingUp,
     Zap,
-    LayoutDashboard,
-    ArrowUpRight,
-    MoreHorizontal
+    Filter,
+    Settings as SettingsIcon,
+    LogOut,
+    Eye,
+    EyeOff,
+    Save,
+    Upload,
+    Globe,
+    Lock,
+    Server,
+    AlertCircle,
+    Loader2,
+    Building,
+    ArrowLeft
 } from 'lucide-react';
 import { format } from 'date-fns';
 import UserManagement from '../components/UserManagement';
 import AnalyticsCharts from '../components/AnalyticsCharts';
 import AIChatWidget from '../components/AIChatWidget';
+import KanbanBoard from '../components/KanbanBoard';
 
 const socket = io('http://localhost:4000');
 
@@ -116,6 +132,8 @@ export default function Dashboard() {
     const [newUser, setNewUser] = useState({ name: '', email: '', password: '' });
     const [filterStatus, setFilterStatus] = useState('');
     const [selectedLeads, setSelectedLeads] = useState([]);
+    const [stages, setStages] = useState([]);
+    const [viewMode, setViewMode] = useState('list'); // 'list' or 'board'
 
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const isAdmin = user.role === 'admin' || user.role === undefined;
@@ -155,6 +173,7 @@ export default function Dashboard() {
         fetchLeads();
         fetchAnalytics();
         fetchTeam();
+        fetchStages();
 
         socket.on('new_lead', (newLead) => {
             setLeads((prev) => [newLead, ...prev]);
@@ -315,6 +334,9 @@ export default function Dashboard() {
 
                     <div className="flex items-center gap-2 md:gap-6 bg-slate-50 md:bg-transparent p-1 md:p-0 rounded-full md:rounded-none">
                         <div className="flex items-center gap-1">
+                            <Link to="/tasks" className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all">
+                                <CheckCircle className="w-4 h-4" /> <span className="hidden sm:inline">Tasks</span>
+                            </Link>
                             <Link to="/workflows" className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all">
                                 <Zap className="w-4 h-4" /> <span className="hidden sm:inline">Workflows</span>
                             </Link>
@@ -433,6 +455,33 @@ export default function Dashboard() {
                             <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold">{leads.length}</span>
                         </div>
 
+                        {/* View Toggle */}
+                        <div className="flex bg-slate-100 p-1 rounded-lg">
+                            <button
+                                onClick={() => setViewMode('list')}
+                                className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+                                title="List View"
+                            >
+                                <LayoutList className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('board')}
+                                className={`p-1.5 rounded-md transition-all ${viewMode === 'board' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+                                title="Board View"
+                            >
+                                <LayoutGrid className="w-4 h-4" />
+                            </button>
+                            {isAdmin && (
+                                <button
+                                    onClick={() => setViewMode('team')}
+                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'team' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+                                    title="Team Performance"
+                                >
+                                    <Trophy className="w-4 h-4" />
+                                </button>
+                            )}
+                        </div>
+
                         <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
                             {/* Filter */}
                             <div className="relative group">
@@ -479,6 +528,21 @@ export default function Dashboard() {
                         </div>
                     </div>
 
+                </div>
+
+                {viewMode === 'board' ? (
+                    <div className="bg-slate-50/50 min-h-[500px]">
+                        <KanbanBoard
+                            leads={leads}
+                            stages={stages}
+                            onLeadUpdate={() => { fetchLeads(); fetchAnalytics(); }}
+                        />
+                    </div>
+                ) : viewMode === 'team' ? (
+                    <div className="min-h-[500px]">
+                        <TeamPerformance />
+                    </div>
+                ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
@@ -607,7 +671,7 @@ export default function Dashboard() {
                             </tbody>
                         </table>
                     </div>
-                </div>
+                )}
             </main>
 
             {/* Modals & Overlays */}

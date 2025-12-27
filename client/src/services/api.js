@@ -90,6 +90,12 @@ export const getInvitations = async () => {
     return response.data;
 };
 
+export const getTeamPerformance = async (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    const response = await api.get(`/api/team/performance?${query}`);
+    return response.data;
+};
+
 export const inviteMember = async (data) => {
     const response = await api.post('/api/team/invite', data);
     return response.data;
@@ -121,6 +127,65 @@ export const createUser = async (userData) => {
 
 export const deleteUser = async (id) => {
     const { data } = await api.delete(`/users/${id}`);
+    return data;
+};
+
+// Task Management
+export const getTasks = async (filters = {}) => {
+    const params = new URLSearchParams(filters).toString();
+    // Support either general tasks query or specific lead tasks if structured that way
+    const { data } = await api.get(`/api/tasks?${params}`);
+    return data;
+};
+
+export const getTasksByLead = async (leadId) => {
+    const { data } = await api.get(`/api/leads/${leadId}/tasks`);
+    return data;
+};
+
+export const createTask = async (taskData) => {
+    const { data } = await api.post('/api/tasks', taskData);
+    return data;
+};
+
+export const updateTask = async (id, taskData) => {
+    const { data } = await api.put(`/api/tasks/${id}`, taskData);
+    return data;
+};
+
+export const completeTask = async (id) => {
+    const { data } = await api.put(`/api/tasks/${id}/complete`);
+    return data;
+};
+
+export const deleteTask = async (id) => {
+    const { data } = await api.delete(`/api/tasks/${id}`);
+    return data;
+};
+
+export const getTaskStats = async () => {
+    const { data } = await api.get('/api/tasks/stats/all');
+    return data;
+};
+
+// Notes
+export const getNotesByLead = async (leadId) => {
+    const { data } = await api.get(`/api/leads/${leadId}/notes`);
+    return data;
+};
+
+export const createNote = async (noteData) => {
+    const { data } = await api.post('/api/notes', noteData);
+    return data;
+};
+
+export const updateNote = async (id, noteData) => {
+    const { data } = await api.put(`/api/notes/${id}`, noteData);
+    return data;
+};
+
+export const deleteNote = async (id) => {
+    const { data } = await api.delete(`/api/notes/${id}`);
     return data;
 };
 
@@ -225,6 +290,69 @@ export const rollbackWorkflow = async (id, versionId) => {
 
 export const deleteWorkflow = async (id) => {
     const { data } = await api.delete(`/api/workflows/${id}`);
+    return data;
+};
+
+// Custom Fields
+export const getCustomFields = async (filters = {}) => {
+    const params = new URLSearchParams(filters).toString();
+    const { data } = await api.get(`/api/custom-fields?${params}`);
+    return data;
+};
+
+export const createCustomField = async (fieldData) => {
+    const { data } = await api.post('/api/custom-fields', fieldData);
+    return data;
+};
+
+export const updateCustomField = async (id, fieldData) => {
+    const { data } = await api.put(`/api/custom-fields/${id}`, fieldData);
+    return data;
+};
+
+export const deleteCustomField = async (id) => {
+    const { data } = await api.delete(`/api/custom-fields/${id}`);
+    return data;
+};
+
+export const reorderCustomFields = async (orders) => {
+    return data;
+};
+
+export const updateLeadCustomFieldValue = async (leadId, key, value) => {
+    // Correct endpoint based on customFieldsRoutes.js
+    const { data } = await api.put(`/api/custom-fields/leads/${leadId}/value`, { key, value });
+    return data;
+};
+
+// Pipeline
+export const getStages = async () => {
+    const { data } = await api.get('/api/pipeline/stages');
+    return data;
+};
+
+export const createStage = async (stageData) => {
+    const { data } = await api.post('/api/pipeline/stages', stageData);
+    return data;
+};
+
+export const updateStage = async (id, stageData) => {
+    const { data } = await api.put(`/api/pipeline/stages/${id}`, stageData);
+    return data;
+};
+
+export const deleteStage = async (id) => {
+    const { data } = await api.delete(`/api/pipeline/stages/${id}`);
+    return data;
+};
+
+export const reorderStages = async (orders) => {
+    const { data } = await api.put('/api/pipeline/stages/reorder/all', { orders });
+    return data;
+};
+
+export const updateLeadStage = async (leadId, stageId) => {
+    const { data } = await api.put(`/api/leads/${leadId}/stage`, { stageId });
     return data;
 };
 

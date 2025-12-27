@@ -90,6 +90,12 @@ app.use('/api/leads', leadRoutes);
 app.use('/auth', authRoutes);
 app.use('/api/organization', organizationRoutes); // Fixed: was /organization, now /api/organization
 app.use('/api/team', teamRoutes);
+app.use('/api/custom-fields', require('./routes/customFieldsRoutes'));
+app.use('/api/tasks', require('./routes/taskRoutes'));
+app.use('/api/notes', require('./routes/noteRoutes'));
+app.use('/api/activities', require('./routes/activityRoutes'));
+app.use('/api/pipeline', require('./routes/pipelineRoutes'));
+
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/ai', require('./routes/aiRoutes')); // AI Chatbot Route

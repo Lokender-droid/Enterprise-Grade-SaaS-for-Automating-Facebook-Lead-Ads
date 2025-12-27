@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Loader2, Upload, Trash2, Building, Save, Shield, CheckCircle, Globe, Lock, Key, Server, Users, Zap, LayoutDashboard, Eye, EyeOff, XCircle, Mail, Phone, Brain, X, Check, AlertCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { getSettings, updateSettings, verifyConnection, autoConfigureWebhooks } from '../services/api';
-import AuditLogsTable from '../components/AuditLogsTable';
+import CustomFieldsSettings from '../components/CustomFieldsSettings';
+import DealPipelineSettings from '../components/DealPipelineSettings';
+import { GanttChartSquare } from 'lucide-react';
+
+
 
 const Settings = () => {
     // --- STATE MANAGEMENT ---
@@ -466,6 +466,18 @@ transition - all duration - 200
                             </form>
                         )}
 
+                        {activeTab === 'custom_fields' && (
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 animate-fade-in-up">
+                                <CustomFieldsSettings />
+                            </div>
+                        )}
+
+                        {activeTab === 'pipeline' && (
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 animate-fade-in-up">
+                                <DealPipelineSettings />
+                            </div>
+                        )}
+
                         {activeTab === 'enteprise' && (
                             <div className="space-y-6 animate-fade-in-up">
                                 {/* Branding Section */}
@@ -556,6 +568,12 @@ transition - all duration - 200
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'custom_fields' && (
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 animate-fade-in-up">
+                                <CustomFieldsSettings />
                             </div>
                         )}
 
