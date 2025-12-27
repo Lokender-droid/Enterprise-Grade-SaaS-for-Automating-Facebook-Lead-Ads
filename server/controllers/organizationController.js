@@ -5,22 +5,24 @@ exports.getSettings = async (req, res) => {
     try {
         console.log('getSettings Controller called for user:', req.user._id, 'OrgID:', req.user.organizationId);
         // Check if user has an organization
+        let org;
         if (!req.user.organizationId) {
-            // If super-admin or user without org, return empty structure or specific message
-            // For Settings page, we can just return empty strings so UI doesn't crash
-            return res.json({
-                name: '',
-                email: req.user.email || '',
-                pageId: '',
-                whatsappPhoneId: '',
-                logo: '',
-                metaAccessToken: '',
-                sendgridApiKey: '',
-                fromEmail: ''
-            });
+            // If Super Admin, try to fetch the first organization for Demo purposes
+            if (req.user.role === 'super_admin') {
+                org = await Organization.findOne();
+            }
+
+            if (!org) {
+                return res.json({
+                    name: '',
+                    email: req.user.email || '',
+                    // ... defaults
+                });
+            }
+        } else {
+            org = await Organization.findById(req.user.organizationId);
         }
 
-        const org = await Organization.findById(req.user.organizationId);
         if (!org) {
             console.log('Organization not found for ID:', req.user.organizationId);
             return res.status(404).json({ message: 'Organization not found' });
@@ -37,7 +39,19 @@ exports.getSettings = async (req, res) => {
             // Masking secrets for security best practices
             metaAccessToken: org.metaAccessToken ? '****************' : '',
             sendgridApiKey: org.sendgridApiKey ? '****************' : '',
-            fromEmail: org.fromEmail
+            fromEmail: org.fromEmail,
+
+            // Advanced AI Keys (Masked)
+            vapiPrivateKey: org.vapiPrivateKey ? '****************' : '',
+            vapiPublicKey: org.vapiPublicKey ? '****************' : '',
+            vapiAssistantId: org.vapiAssistantId ? '****************' : '',
+            openaiApiKey: org.openaiApiKey ? '****************' : '',
+
+            // Enterprise
+            customDomain: org.customDomain || '',
+            customRoles: org.customRoles || [],
+            ssoSettings: org.ssoSettings || { provider: 'none', enabled: false },
+            integrations: org.integrations || { salesforce: { connected: false }, hubspot: { connected: false } }
         });
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
@@ -54,10 +68,40 @@ exports.updateSettings = async (req, res) => {
             metaAccessToken,
             sendgridApiKey,
             fromEmail,
-            deleteLogo
+            deleteLogo,
+            // AI Keys
+            vapiPrivateKey,
+            vapiPublicKey,
+            vapiAssistantId,
+            openaiApiKey,
+
+            // Enterprise
+            customDomain,
+            customRoles,
+            ssoSettings,
+            integrations
         } = req.body;
 
-        const org = await Organization.findById(req.user.organizationId);
+        let org;
+        if (!req.user.organizationId) {
+            if (req.user.role === 'super_admin') {
+                org = await Organization.findOne();
+
+                // Auto-create Demo Org if missing (Self-healing)
+                if (!org) {
+                    console.log("Auto-creating Default Organization for Super Admin");
+                    org = await Organization.create({
+                        name: 'MetaLead Demo Enterprise',
+                        email: 'admin@metalead.com',
+                        plan: 'enterprise',
+                        isActive: true
+                    });
+                }
+            }
+        } else {
+            org = await Organization.findById(req.user.organizationId);
+        }
+
         if (!org) {
             return res.status(404).json({ message: 'Organization not found' });
         }
@@ -74,6 +118,36 @@ exports.updateSettings = async (req, res) => {
         }
         if (sendgridApiKey && !sendgridApiKey.includes('****')) {
             org.sendgridApiKey = sendgridApiKey;
+        }
+
+        // Update AI Keys
+        if (vapiPrivateKey && !vapiPrivateKey.includes('****')) org.vapiPrivateKey = vapiPrivateKey;
+        if (vapiPublicKey && !vapiPublicKey.includes('****')) org.vapiPublicKey = vapiPublicKey;
+        if (vapiAssistantId && !vapiAssistantId.includes('****')) org.vapiAssistantId = vapiAssistantId;
+        if (openaiApiKey && !openaiApiKey.includes('****')) org.openaiApiKey = openaiApiKey;
+
+        // Enterprise Updates
+        if (customDomain !== undefined) org.customDomain = customDomain;
+        // Basic Role Update (Expects JSON array)
+        if (customRoles) {
+            try {
+                const roles = typeof customRoles === 'string' ? JSON.parse(customRoles) : customRoles;
+                org.customRoles = roles;
+            } catch (e) {
+                console.error("Failed to parse custom roles");
+            }
+        }
+
+        // Update SSO & Integrations (Direct Object replacement for now, simpler)
+        if (ssoSettings) {
+            try {
+                org.ssoSettings = typeof ssoSettings === 'string' ? JSON.parse(ssoSettings) : ssoSettings;
+            } catch (e) { }
+        }
+        if (integrations) {
+            try {
+                org.integrations = typeof integrations === 'string' ? JSON.parse(integrations) : integrations;
+            } catch (e) { }
         }
 
         // Handle Logo Upload

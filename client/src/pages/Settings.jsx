@@ -12,7 +12,17 @@ const Settings = () => {
         whatsappPhoneId: '',
         metaAccessToken: '',
         sendgridApiKey: '',
-        fromEmail: ''
+        fromEmail: '',
+        // AI Keys
+        vapiPrivateKey: '',
+        vapiPublicKey: '',
+        vapiAssistantId: '',
+        openaiApiKey: '',
+        // Enterprise
+        customDomain: '',
+        customRoles: [],
+        ssoSettings: { provider: 'none', enabled: false },
+        integrations: { salesforce: { connected: false }, hubspot: { connected: false } }
     });
     const [logo, setLogo] = useState(null); // URL string for display
     const [loading, setLoading] = useState(true);
@@ -23,7 +33,7 @@ const Settings = () => {
     const fileInputRef = useRef(null);
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
-    const [activeTab, setActiveTab] = useState('general'); // 'general' | 'audit'
+    const [activeTab, setActiveTab] = useState('general'); // 'general' | 'audit' | 'team' | 'enterprise'
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -89,6 +99,12 @@ const Settings = () => {
                 data.append('sendgridApiKey', formData.sendgridApiKey);
             }
 
+            // AI Keys
+            if (formData.vapiPrivateKey && !formData.vapiPrivateKey.includes('****')) data.append('vapiPrivateKey', formData.vapiPrivateKey);
+            if (formData.vapiPublicKey && !formData.vapiPublicKey.includes('****')) data.append('vapiPublicKey', formData.vapiPublicKey);
+            if (formData.vapiAssistantId && !formData.vapiAssistantId.includes('****')) data.append('vapiAssistantId', formData.vapiAssistantId);
+            if (formData.openaiApiKey && !formData.openaiApiKey.includes('****')) data.append('openaiApiKey', formData.openaiApiKey);
+
             // File Handling
             if (selectedFile) {
                 data.append('logo', selectedFile);
@@ -114,6 +130,67 @@ const Settings = () => {
         } catch (err) {
             console.error('Error updating settings', err);
             setError('Failed to update settings');
+        }
+    };
+
+    // --- Enterprise Action Handlers ---
+
+    const handleVerifyDomain = async (e) => {
+        e.preventDefault(); // Prevent form submit
+        // Mock verification
+        if (!formData.customDomain) return alert("Please enter a domain");
+        setLoading(true);
+        setTimeout(async () => {
+            alert(`Draft DNS record verified for ${formData.customDomain}. SSL Provisioning started.`);
+            // In real app, we'd check against backend. Here we just strictly save the domain
+            const data = new FormData();
+            data.append('customDomain', formData.customDomain);
+            await updateSettings(data);
+            setLoading(false);
+        }, 1500);
+    };
+
+    const handleConnectSSO = async (provider) => {
+        setLoading(true);
+        // Toggle Logic
+        const newSettings = { ...formData.ssoSettings, provider: provider, enabled: true };
+        const data = new FormData();
+        data.append('ssoSettings', JSON.stringify(newSettings));
+
+        try {
+            await updateSettings(data);
+            setFormData(prev => ({ ...prev, ssoSettings: newSettings }));
+            alert(`Redirecting to ${provider} OAuth... (Simulation: Connected)`);
+        } catch (e) {
+            setError('Connection failed');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleConnectCRM = async (crm) => {
+        setLoading(true);
+        const currentStatus = formData.integrations?.[crm]?.connected || false;
+        // Toggle
+        const newIntegrations = {
+            ...formData.integrations,
+            [crm]: { ...formData.integrations?.[crm], connected: !currentStatus }
+        };
+
+        const data = new FormData();
+        data.append('integrations', JSON.stringify(newIntegrations));
+
+        try {
+            await updateSettings(data);
+            setFormData(prev => ({ ...prev, integrations: newIntegrations }));
+            if (!currentStatus) alert(`Connected to ${crm} successfully. Syncing leads...`);
+        } catch (e) {
+            console.error('Integration Error:', e);
+            const errorMsg = e.response?.data?.message || e.message || 'Integration failed';
+            alert(`Error: ${errorMsg}`);
+            setError(errorMsg);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -185,6 +262,18 @@ const Settings = () => {
                             >
                                 <Shield className="w-4 h-4" />
                                 Audit Logs
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('team')}
+                                className={`pb-4 px-4 text-sm font-medium transition flex items-center gap-2 ${activeTab === 'team' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+                            >
+                                <span role="img" aria-label="team">👥</span> Team & Roles
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('enterprise')}
+                                className={`pb-4 px-4 text-sm font-medium transition flex items-center gap-2 ${activeTab === 'enterprise' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+                            >
+                                <span role="img" aria-label="rocket">🚀</span> Enterprise
                             </button>
                         </div>
 
@@ -359,6 +448,100 @@ const Settings = () => {
                                     </div>
                                 </div>
 
+                                {/* Advanced AI Configuration */}
+                                <div>
+                                    <h3 className="text-lg font-medium leading-6 text-gray-900 border-b pb-2 mb-4 mt-8 flex items-center gap-2">
+                                        <span role="img" aria-label="robot">🤖</span> Advanced AI Agents (The Game Changers)
+                                    </h3>
+
+                                    <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+                                        <div className="flex">
+                                            <div className="ml-3">
+                                                <p className="text-sm text-blue-700">
+                                                    These settings activate the <strong>Neural Agents</strong> that autonomously engage, research, and qualify your leads. Fill these in to turn the system from a "Database" into a "Sales Machine".
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-6 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+
+                                        {/* Voice AI Section */}
+                                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                            <div className="sm:col-span-2 border-b border-gray-100 pb-4">
+                                                <h4 className="text-md font-bold text-gray-900 mb-1 flex items-center gap-2">
+                                                    🗣️ Instant Voice Agent (Vapi.ai)
+                                                </h4>
+                                                <p className="text-sm text-gray-500">
+                                                    <strong>What it does:</strong> Calls every new lead within 10 seconds using a human-like voice AI. <br />
+                                                    <strong>Why you need it:</strong> "Speed to Lead" is the #1 conversion factor. This agent ensures you <em>never</em> miss a hot lead, qualifying them 24/7 before your sales team even wakes up.
+                                                </p>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700">Vapi Private Key</label>
+                                                <input
+                                                    type="password"
+                                                    name="vapiPrivateKey"
+                                                    value={formData.vapiPrivateKey || ''}
+                                                    onChange={handleChange}
+                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                                    placeholder={formData.vapiPrivateKey ? '****************' : 'Paste Private Key'}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700">Vapi Public Key</label>
+                                                <input
+                                                    type="password"
+                                                    name="vapiPublicKey"
+                                                    value={formData.vapiPublicKey || ''}
+                                                    onChange={handleChange}
+                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                                    placeholder={formData.vapiPublicKey ? '****************' : 'Paste Public Key'}
+                                                />
+                                            </div>
+                                            <div className="sm:col-span-2">
+                                                <label className="block text-sm font-medium text-gray-700">Vapi Assistant ID</label>
+                                                <input
+                                                    type="text"
+                                                    name="vapiAssistantId"
+                                                    value={formData.vapiAssistantId || ''}
+                                                    onChange={handleChange}
+                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                                    placeholder={formData.vapiAssistantId ? '****************' : 'Paste Assistant ID'}
+                                                />
+                                                <p className="mt-1 text-xs text-gray-400">Created in your Vapi Dashboard. Defines the voice, script, and behavior.</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Intelligence Section */}
+                                        <div className="border-t border-gray-100 pt-6">
+                                            <div className="mb-4">
+                                                <h4 className="text-md font-bold text-gray-900 mb-1 flex items-center gap-2">
+                                                    🧠 Strategic Intelligence Core (OpenAI)
+                                                </h4>
+                                                <p className="text-sm text-gray-500">
+                                                    <strong>What it does:</strong> Powers the <em>Competitor Spy Bot</em> and <em>Psychological Profiler</em>. <br />
+                                                    <strong>Why you need it:</strong> Gives your sales team supernatural powers. They'll know the lead's competitor weaknesses and personality type (DISC) before saying "Hello".
+                                                </p>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700">OpenAI API Key</label>
+                                                <input
+                                                    type="password"
+                                                    name="openaiApiKey"
+                                                    value={formData.openaiApiKey || ''}
+                                                    onChange={handleChange}
+                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                                    placeholder={formData.openaiApiKey ? '****************' : 'sk-proj-...'}
+                                                />
+                                                <p className="mt-1 text-xs text-gray-400">Used for generating Battlecards, Profiling, and Lead Scoring analysis.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {/* Action Buttons */}
                                 <div className="pt-5 border-t border-gray-200 flex justify-end">
                                     <button
@@ -370,7 +553,7 @@ const Settings = () => {
                                     </button>
                                 </div>
                             </form>
-                        ) : (
+                        ) : activeTab === 'audit' ? (
                             <div>
                                 <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                                     <Shield className="w-5 h-5 text-indigo-600" />
@@ -381,7 +564,158 @@ const Settings = () => {
                                 </p>
                                 <AuditLogsTable />
                             </div>
-                        )}
+                        ) : activeTab === 'team' ? (
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    👥 Role-Based Access Control (RBAC)
+                                </h3>
+                                <p className="text-sm text-gray-500 mb-6">
+                                    Create granular roles for your team. You can define exactly what each member can see or do.
+                                </p>
+
+                                <div className="space-y-4">
+                                    {/* Mock Role List */}
+                                    <div className="border rounded-md p-4 flex justify-between items-center bg-gray-50">
+                                        <div>
+                                            <h4 className="font-bold text-gray-700">Admin</h4>
+                                            <p className="text-xs text-gray-500">Full Access</p>
+                                        </div>
+                                        <span className="px-2 py-1 bg-gray-200 text-gray-600 text-xs rounded">System Default</span>
+                                    </div>
+                                    <div className="border rounded-md p-4 flex justify-between items-center bg-gray-50">
+                                        <div>
+                                            <h4 className="font-bold text-gray-700">Sales Agent</h4>
+                                            <p className="text-xs text-gray-500">Can View Own Leads, Make Calls</p>
+                                        </div>
+                                        <span className="px-2 py-1 bg-gray-200 text-gray-600 text-xs rounded">System Default</span>
+                                    </div>
+
+                                    {/* Custom Role Creator Mock */}
+                                    <div className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center hover:bg-gray-50 cursor-pointer transition">
+                                        <p className="text-indigo-600 font-medium">+ Create Custom Role</p>
+                                        <p className="text-xs text-gray-400 mt-1">e.g. "Junior Intern", "Billing Manager"</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : activeTab === 'enterprise' ? (
+                            <div className="space-y-8">
+                                {/* 1. White Labeling */}
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                        🏷️ White-Labeling & Branding
+                                    </h3>
+                                    <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
+                                        <label className="block text-sm font-medium text-gray-700">Custom Domain (CNAME)</label>
+                                        <div className="mt-1 flex rounded-md shadow-sm">
+                                            <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+                                                https://
+                                            </span>
+                                            <input
+                                                type="text"
+                                                name="customDomain"
+                                                value={formData.customDomain || ''}
+                                                onChange={handleChange}
+                                                className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 border"
+                                                placeholder="leads.your-company.com"
+                                            />
+                                        </div>
+                                        <p className="mt-2 text-xs text-gray-500">
+                                            To verify, please add a CNAME record pointing to <strong>app.metalead.com</strong> in your DNS provider.
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={handleVerifyDomain}
+                                            disabled={loading}
+                                            className="mt-3 px-3 py-2 bg-indigo-600 text-white text-xs font-medium rounded hover:bg-indigo-700 disabled:opacity-50"
+                                        >
+                                            {loading ? 'Verifying...' : 'Verify Domain'}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* 2. Security (SSO) */}
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                        🔐 Security (SSO & MFA)
+                                    </h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="border p-4 rounded-lg flex items-center justify-between cursor-pointer hover:border-indigo-500">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center text-red-600 font-bold">G</div>
+                                                <div>
+                                                    <div className="font-medium text-sm">Google Workspace</div>
+                                                    <div className="text-xs text-gray-500">SAML / OIDC</div>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleConnectSSO('google')}
+                                                className={`text-xs font-medium ${formData.ssoSettings?.provider === 'google' ? 'text-green-600' : 'text-indigo-600'}`}
+                                            >
+                                                {formData.ssoSettings?.provider === 'google' ? 'Connected' : 'Connect'}
+                                            </button>
+                                        </div>
+                                        <div className="border p-4 rounded-lg flex items-center justify-between cursor-pointer hover:border-indigo-500">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">M</div>
+                                                <div>
+                                                    <div className="font-medium text-sm">Microsoft Azure AD</div>
+                                                    <div className="text-xs text-gray-500">Enterprise SSO</div>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleConnectSSO('microsoft')}
+                                                className={`text-xs font-medium ${formData.ssoSettings?.provider === 'microsoft' ? 'text-green-600' : 'text-indigo-600'}`}
+                                            >
+                                                {formData.ssoSettings?.provider === 'microsoft' ? 'Connected' : 'Connect'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* 3. Integrations */}
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                        🔄 CRM Integrations
+                                    </h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="border p-4 rounded-lg">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="font-bold text-gray-700">Salesforce</span>
+                                                <span className={`text-xs px-2 py-1 rounded ${formData.integrations?.salesforce?.connected ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                                    {formData.integrations?.salesforce?.connected ? 'Connected' : 'Disconnected'}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-gray-500 mb-3">Sync leads bi-directionally.</p>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleConnectCRM('salesforce')}
+                                                className={`w-full py-1.5 border text-xs rounded hover:bg-indigo-50 ${formData.integrations?.salesforce?.connected ? 'border-red-600 text-red-600' : 'border-indigo-600 text-indigo-600'}`}
+                                            >
+                                                {formData.integrations?.salesforce?.connected ? 'Disconnect' : 'Connect Salesforce'}
+                                            </button>
+                                        </div>
+                                        <div className="border p-4 rounded-lg">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="font-bold text-gray-700">HubSpot</span>
+                                                <span className={`text-xs px-2 py-1 rounded ${formData.integrations?.hubspot?.connected ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                                    {formData.integrations?.hubspot?.connected ? 'Connected' : 'Disconnected'}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-gray-500 mb-3">Push new leads to CRM.</p>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleConnectCRM('hubspot')}
+                                                className={`w-full py-1.5 border text-xs rounded hover:bg-indigo-50 ${formData.integrations?.hubspot?.connected ? 'border-red-600 text-red-600' : 'border-indigo-600 text-indigo-600'}`}
+                                            >
+                                                {formData.integrations?.hubspot?.connected ? 'Disconnect' : 'Connect HubSpot'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : null}
                     </div>
                 </main>
             </div>

@@ -30,5 +30,10 @@ module.exports = {
     bucket: process.env.S3_BUCKET,
     accessKey: process.env.S3_ACCESS_KEY,
     secretKey: process.env.S3_SECRET_KEY,
-  }
+  },
+  vapi: {
+    privateKey: process.env.VAPI_PRIVATE_KEY,
+    publicKey: process.env.VAPI_PUBLIC_KEY,
+  },
+  openaiApiKey: process.env.OPENAI_API_KEY,
 };

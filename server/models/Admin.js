@@ -8,7 +8,7 @@ const AdminSchema = new mongoose.Schema({
     password: { type: String, required: true },
     role: {
         type: String,
-        enum: ['super_admin', 'admin', 'manager', 'agent'],
+        // enum: ['super_admin', 'admin', 'manager', 'agent'], // Relaxed for Custom Enterprise Roles
         default: 'admin'
     },
     organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' }, // Link user to an Org

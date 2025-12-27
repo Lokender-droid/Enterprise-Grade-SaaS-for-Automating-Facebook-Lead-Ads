@@ -45,7 +45,7 @@ export default function App() {
                         <Profile />
                     </PrivateRoute>
                 } />
-                } />
+
                 <Route path="/billing" element={
                     <PrivateRoute>
                         <Billing />

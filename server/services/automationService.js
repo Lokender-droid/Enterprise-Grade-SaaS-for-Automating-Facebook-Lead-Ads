@@ -1,16 +1,9 @@
 const Workflow = require('../models/Workflow');
 const { sendEmail } = require('./emailService');
-// We will need a new emailService or modify existing one to send generic emails.
-// For now assuming we can require it or use a placeholder.
-
-/**
- * Automation Engine
- * Traverses the workflow graph and executes nodes.
- */
-
-/**
- * Automation Engine with Circuit Breaker & Retry Logic
- */
+const voiceService = require('./voiceService');
+const intelligenceService = require('./intelligenceService');
+const profilingService = require('./profilingService');
+const revenueService = require('./revenueService');
 
 // In-memory state for Circuit Breaker
 const circuitState = {
@@ -70,7 +63,7 @@ async function executeWorkflow(graph, startNode, context) {
 
         try {
             // RETRY LOGIC with Exponential Backoff
-            await executeWithRetry(currentNode, context);
+            const resultHandle = await executeWithRetry(currentNode, context);
 
             // Reset Circuit on success
             circuitState.failures = 0;
@@ -79,8 +72,21 @@ async function executeWorkflow(graph, startNode, context) {
             const edges = graph.edges.filter(e => e.source === currentNode.id);
             if (edges.length === 0) break;
 
-            // TODO: Fallback Logic check if previous execution failed (not implemented yet for individual paths)
-            currentNode = graph.nodes.find(n => n.id === edges[0].target);
+            let nextEdge;
+            // Branching Logic
+            if (resultHandle && typeof resultHandle === 'string') {
+                nextEdge = edges.find(e => e.sourceHandle === resultHandle);
+                if (!nextEdge) {
+                    // Fallback to default if not specific handle found (or if resultHandle was void)
+                    nextEdge = edges[0];
+                }
+            } else {
+                nextEdge = edges[0];
+            }
+
+            if (!nextEdge) break;
+
+            currentNode = graph.nodes.find(n => n.id === nextEdge.target);
 
         } catch (err) {
             console.error(`      ☠ Node Execution Failed: ${err.message}`);
@@ -92,10 +98,6 @@ async function executeWorkflow(graph, startNode, context) {
                 circuitState.isOpen = true;
                 circuitState.nextTry = Date.now() + COOLDOWN_MS;
             }
-
-            // FALLBACK PATH
-            // In a real graph, we would look for an edge with handle="failure"
-            // For now, we simulate a robust exit.
             break;
         }
     }
@@ -104,8 +106,7 @@ async function executeWorkflow(graph, startNode, context) {
 async function executeWithRetry(node, context, retries = 3) {
     for (let i = 0; i < retries; i++) {
         try {
-            await processNode(node, context);
-            return; // Success
+            return await processNode(node, context);
         } catch (err) {
             const isLastAttempt = i === retries - 1;
             console.warn(`         ⚠️ Attempt ${i + 1} failed. ${isLastAttempt ? 'Giving up.' : 'Retrying...'}`);
@@ -123,7 +124,7 @@ async function processNode(node, context) {
 
     // 1. ACTION: EMAIL
     if (nodeType === 'action' && subType === 'email') {
-        if (!config?.subject) throw new Error("Missing Email Subject"); // Will trigger retry
+        if (!config?.subject) throw new Error("Missing Email Subject");
 
         const subject = config.subject.replace('{name}', context.name || 'User');
         console.log(`         ✉ SENDING EMAIL to ${context.email} (Subj: ${subject})`);
@@ -136,68 +137,41 @@ async function processNode(node, context) {
         await delay(300);
     }
 
-    // 4. CONDITION
+    // 3. ACTION: INSTANT VOICE CALL
+    if (nodeType === 'action' && subType === 'voice_call') {
+        console.log(`         📞 STARTING VOICE AGENT...`);
+        await voiceService.triggerInstantCall(context);
+    }
+
+    // 4. ACTION: INTELLIGENCE AGENT (SPY BOT)
+    if (nodeType === 'action' && (subType === 'spy_bot' || subType === 'competitor_analysis')) {
+        console.log(`         🕵️ RUNNING SPY BOT...`);
+        await intelligenceService.generateBattlecard(context);
+    }
+
+    // 5. ACTION: PROFILING AGENT (DISC)
+    if (nodeType === 'action' && subType === 'disc_profile') {
+        console.log(`         🧠 ANALYZING PSYCHOLOGY...`);
+        await profilingService.predictDISCProfile(context);
+    }
+
+    // 6. ACTION: REVENUE PREDICTION
+    if (nodeType === 'action' && subType === 'revenue_prediction') {
+        console.log(`         💰 PREDICTING REVENUE...`);
+        await revenueService.predictRevenueValue(context);
+    }
+
+    // 7. CONDITION
     if (nodeType === 'condition') {
         const { field, operator, value } = config;
-
-        // Evaluate
         let conditionMet = false;
         let actualValue = context[field];
 
-        // Hacky evaluation for demo numbers/strings
-        // In prod, use a safer eval or math library
         if (operator === '>') conditionMet = actualValue > value;
         if (operator === '<') conditionMet = actualValue < value;
         if (operator === '=') conditionMet = actualValue == value;
 
         console.log(`         ❓ CONDITION: ${field}(${actualValue}) ${operator} ${value} ? => ${conditionMet}`);
-
-        // Return the Handle ID to follow
         return conditionMet ? 'true' : 'false';
-    }
-}
-
-async function executeWorkflow(graph, startNode, context) {
-    let currentNode = startNode;
-    let steps = 0;
-    const MAX_STEPS = 50;
-
-    while (currentNode && steps < MAX_STEPS) {
-        steps++;
-        console.log(`      Running Node: ${currentNode.data.label}`);
-
-        try {
-            // EXECUTE current node logic
-            // If it returns a string, it's a specific path (handleId)
-            const resultHandle = await executeWithRetry(currentNode, context);
-
-            // Reset Circuit on success
-            circuitState.failures = 0;
-
-            // Move Next
-            const edges = graph.edges.filter(e => e.source === currentNode.id);
-            if (edges.length === 0) break;
-
-            let nextEdge;
-            // Branching Logic
-            if (resultHandle) {
-                // Find edge connected to the specific sourceHandle (true/false)
-                nextEdge = edges.find(e => e.sourceHandle === resultHandle);
-                if (!nextEdge) {
-                    console.log(`         🚫 No path found for result: ${resultHandle}`);
-                    break;
-                }
-            } else {
-                // Default behavior (single output)
-                nextEdge = edges[0];
-            }
-
-            currentNode = graph.nodes.find(n => n.id === nextEdge.target);
-
-        } catch (err) {
-            console.error(`      ☠ Node Execution Failed: ${err.message}`);
-            // ... (Circuit Breaker Logic same as before)
-            break;
-        }
     }
 }

@@ -12,6 +12,33 @@ const OrganizationSchema = new mongoose.Schema({
     whatsappPhoneId: { type: String },
     pageId: { type: String }, // To identify which org a webhook belongs to
 
+    // Enterprise: White-Labeling
+    customDomain: { type: String }, // e.g. leads.client.com
+    domainVerified: { type: Boolean, default: false },
+
+    // Enterprise: RBAC (Custom Roles)
+    // Default roles are: admin, manager, agent. Here we define custom ones.
+    customRoles: [{
+        name: { type: String }, // e.g. "Junior Sales"
+        permissions: [{ type: String }] // e.g. ["view_leads", "make_calls"] (No "delete_leads")
+    }],
+
+    // Enterprise: Usage & Limits
+    ssoSettings: {
+        provider: { type: String, enum: ['google', 'microsoft', 'none'], default: 'none' },
+        enabled: { type: Boolean, default: false }
+    },
+    integrations: {
+        salesforce: { connected: { type: Boolean, default: false }, lastSync: Date },
+        hubspot: { connected: { type: Boolean, default: false }, lastSync: Date }
+    },
+
+    // Advanced AI Keys
+    vapiPrivateKey: { type: String },
+    vapiPublicKey: { type: String },
+    vapiAssistantId: { type: String },
+    openaiApiKey: { type: String },
+
     // Stripe Payment Details
     stripeCustomerId: { type: String },
     stripeSubscriptionId: { type: String },

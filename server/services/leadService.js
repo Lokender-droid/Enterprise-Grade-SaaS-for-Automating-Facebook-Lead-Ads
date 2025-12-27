@@ -4,8 +4,14 @@ const emailService = require('./emailService');
 const whatsappService = require('./whatsappService');
 const aiScoringService = require('./aiScoringService');
 const Lead = require('../models/Lead');
+const voiceService = require('./voiceService');
+const intelligenceService = require('./intelligenceService');
+const profilingService = require('./profilingService');
+const revenueService = require('./revenueService');
+const automationService = require('./automationService');
 
 const Organization = require('../models/Organization');
+const config = require('../config');
 
 const processNewLead = async (leadId, pageId, io) => {
     logger.info(`Processing new lead: ${leadId} for Page: ${pageId}`);
@@ -23,19 +29,27 @@ const processNewLead = async (leadId, pageId, io) => {
             metaAccessToken: organization.metaAccessToken,
             whatsapp: {
                 phoneId: organization.whatsappPhoneId,
-                accessToken: organization.metaAccessToken // Assuming same token for now
+                accessToken: organization.metaAccessToken
             },
             sendgridApiKey: organization.sendgridApiKey,
             fromEmail: organization.fromEmail,
             name: organization.name,
-            ctaLink: config.ctaLink // Or org specific link
+            ctaLink: config.ctaLink,
+
+            // Advanced AI Keys from Org
+            vapi: {
+                privateKey: organization.vapiPrivateKey,
+                publicKey: organization.vapiPublicKey,
+                assistantId: organization.vapiAssistantId
+            },
+            openaiApiKey: organization.openaiApiKey
         };
 
         // 1. Fetch from Facebook using Org Token
         const leadData = await facebookService.fetchLead(leadId, orgConfig.metaAccessToken);
 
-        // 1.5 Calculate Lead Score (AI)
-        const scoreResult = await aiScoringService.calculateLeadScore(leadData);
+        // 1.5 Calculate Lead Score (AI) - Passing Org Config for Keys
+        const scoreResult = await aiScoringService.calculateLeadScore(leadData, orgConfig);
 
         // 2. Save Initial Lead with Org ID
         let lead = new Lead({
@@ -46,9 +60,12 @@ const processNewLead = async (leadId, pageId, io) => {
         });
         await lead.save();
 
-        // Notify Admin UI (Room based emission would be better for multi-tenant)
-        // io.to(organization._id).emit('new_lead', lead); <-- Future optimization
-        if (io) io.emit('new_lead', lead); // Currently emits to everyone (MVP limitation)
+        // --- ADVANCED AI AGENTS ---
+        await triggerAdvancedFeatures(lead, orgConfig);
+        // --------------------------
+
+        // Notify Admin UI 
+        if (io) io.emit('new_lead', lead);
 
         // 3. Send Email
         try {
@@ -85,4 +102,24 @@ const processNewLead = async (leadId, pageId, io) => {
     }
 };
 
-module.exports = { processNewLead };
+const triggerAdvancedFeatures = async (lead, orgConfig) => {
+    try {
+        // 1. Spy Bot & Profiling (Sequential to avoid VersionError)
+        await intelligenceService.generateBattlecard(lead, orgConfig);
+        await profilingService.predictDISCProfile(lead, orgConfig);
+        await revenueService.predictRevenueValue(lead); // Revenue likely doesn't need API keys if logic is internal
+
+        // 2. Instant Voice Agent
+        if (lead.phone) {
+            voiceService.triggerInstantCall(lead, orgConfig).catch(e => logger.error('Voice Call Error', e));
+        }
+
+        // 3. Trigger Omni-channel Swarm Workflows
+        automationService.triggerWorkflows('lead_created', lead).catch(e => logger.error('Workflow Error', e));
+
+    } catch (aiError) {
+        logger.error('Advanced AI Features encountered an interruption:', aiError);
+    }
+};
+
+module.exports = { processNewLead, triggerAdvancedFeatures };

@@ -81,9 +81,8 @@ exports.createLead = async (req, res) => {
         });
 
         // ⚡ TRIGGER AUTOMATION
-        const { triggerWorkflows } = require('../services/automationService');
-        // Fire and forget catch
-        triggerWorkflows('lead_created', newLead).catch(err => console.error('Automation Error:', err));
+        // ⚡ TRIGGER ADVANCED AGENTS (Swarm, Voice, Intelligence)
+        leadService.triggerAdvancedFeatures(newLead).catch(err => console.error('Enrichment Error:', err));
 
         res.status(201).json(newLead);
     } catch (error) {
@@ -223,6 +222,18 @@ exports.assignLead = async (req, res) => {
 // GET /leads/seed
 exports.createTestLead = async (req, res) => {
     try {
+        // Fallback for unauthenticated seed
+        let orgId, userName;
+        if (req.user) {
+            orgId = req.user.organizationId;
+            userName = req.user.name;
+        } else {
+            const Organization = require('../models/Organization');
+            const firstOrg = await Organization.findOne();
+            if (firstOrg) orgId = firstOrg._id;
+            userName = 'System Seed';
+        }
+
         const newLead = await Lead.create({
             fb_lead_id: 'test_' + Date.now(),
             name: 'Lokender Singh',
@@ -232,14 +243,13 @@ exports.createTestLead = async (req, res) => {
             status: 'New',
             emailStatus: 'sent',
             whatsappStatus: 'pending',
-            organizationId: req.user.organizationId,
-            history: [{ action: 'Created', performedBy: req.user.name }]
+            organizationId: orgId,
+            history: [{ action: 'Created', performedBy: userName }]
         });
 
         // ⚡ TRIGGER AUTOMATION
-        const { triggerWorkflows } = require('../services/automationService');
-        // Fire and forget (don't await, let it run in background)
-        triggerWorkflows('lead_created', newLead).catch(err => console.error('Automation Error:', err));
+        // ⚡ TRIGGER ADVANCED AGENTS
+        leadService.triggerAdvancedFeatures(newLead).catch(err => console.error('Enrichment Error:', err));
 
         res.status(201).json(newLead);
     } catch (error) {
