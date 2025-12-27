@@ -80,9 +80,12 @@ exports.createLead = async (req, res) => {
             history: [{ action: 'Created Manually', performedBy: req.user.name }]
         });
 
+        const org = await Organization.findById(orgId);
+
         // ⚡ TRIGGER AUTOMATION
         // ⚡ TRIGGER ADVANCED AGENTS (Swarm, Voice, Intelligence)
-        leadService.triggerAdvancedFeatures(newLead).catch(err => console.error('Enrichment Error:', err));
+        // Pass the full org object so services can access API keys (vapi, openai)
+        leadService.triggerAdvancedFeatures(newLead, org).catch(err => console.error('Enrichment Error:', err));
 
         res.status(201).json(newLead);
     } catch (error) {

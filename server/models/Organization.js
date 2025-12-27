@@ -37,6 +37,7 @@ const OrganizationSchema = new mongoose.Schema({
     vapiPrivateKey: { type: String },
     vapiPublicKey: { type: String },
     vapiAssistantId: { type: String },
+    vapiPhoneNumber: { type: String }, // The Twilio/Vapi number to call FROM
     openaiApiKey: { type: String },
 
     // Stripe Payment Details

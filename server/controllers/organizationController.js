@@ -45,6 +45,7 @@ exports.getSettings = async (req, res) => {
             vapiPrivateKey: org.vapiPrivateKey ? '****************' : '',
             vapiPublicKey: org.vapiPublicKey ? '****************' : '',
             vapiAssistantId: org.vapiAssistantId ? '****************' : '',
+            vapiPhoneNumber: org.vapiPhoneNumber || '',
             openaiApiKey: org.openaiApiKey ? '****************' : '',
 
             // Enterprise
@@ -73,6 +74,7 @@ exports.updateSettings = async (req, res) => {
             vapiPrivateKey,
             vapiPublicKey,
             vapiAssistantId,
+            vapiPhoneNumber,
             openaiApiKey,
 
             // Enterprise
@@ -121,10 +123,12 @@ exports.updateSettings = async (req, res) => {
         }
 
         // Update AI Keys
-        if (vapiPrivateKey && !vapiPrivateKey.includes('****')) org.vapiPrivateKey = vapiPrivateKey;
-        if (vapiPublicKey && !vapiPublicKey.includes('****')) org.vapiPublicKey = vapiPublicKey;
-        if (vapiAssistantId && !vapiAssistantId.includes('****')) org.vapiAssistantId = vapiAssistantId;
-        if (openaiApiKey && !openaiApiKey.includes('****')) org.openaiApiKey = openaiApiKey;
+        // Update AI Keys
+        if (vapiPrivateKey !== undefined && !vapiPrivateKey.includes('****')) org.vapiPrivateKey = vapiPrivateKey;
+        if (vapiPublicKey !== undefined && !vapiPublicKey.includes('****')) org.vapiPublicKey = vapiPublicKey;
+        if (vapiAssistantId !== undefined && !vapiAssistantId.includes('****')) org.vapiAssistantId = vapiAssistantId;
+        if (vapiPhoneNumber !== undefined) org.vapiPhoneNumber = vapiPhoneNumber;
+        if (openaiApiKey !== undefined && !openaiApiKey.includes('****')) org.openaiApiKey = openaiApiKey;
 
         // Enterprise Updates
         if (customDomain !== undefined) org.customDomain = customDomain;

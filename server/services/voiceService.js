@@ -10,9 +10,10 @@ const DEFAULT_ASSISTANT_ID = 'your-vapi-assistant-id';
 
 exports.triggerInstantCall = async (lead, orgConfig) => {
     try {
-        const vapiConfig = orgConfig?.vapi || config.vapi; // Fallback to global if not in org (backward compatibility)
-        const privateKey = vapiConfig.privateKey;
-        const assistantId = vapiConfig.assistantId || DEFAULT_ASSISTANT_ID;
+        // orgConfig is the whole Organization document
+        const privateKey = orgConfig.vapiPrivateKey || config.vapi.privateKey;
+        const assistantId = orgConfig.vapiAssistantId || DEFAULT_ASSISTANT_ID;
+        const fromNumber = orgConfig.vapiPhoneNumber || "+1234567890"; // Def to placeholder if missing
 
         if (!privateKey) {
             console.warn('⚠️ Vapi API Key missing in Org Settings. Skipping Voice Call.');
@@ -24,13 +25,11 @@ exports.triggerInstantCall = async (lead, orgConfig) => {
             return { success: false, error: 'Missing Phone' };
         }
 
-        console.log(`📞 Initiating Vapi Call to ${lead.phone}...`);
+        console.log(`📞 Initiating Vapi Call to ${lead.phone} from ${fromNumber}...`);
 
-        // This payload depends on Vapi.ai API specifics
-        // Usually POST /call/phone
         const payload = {
             phoneNumber: {
-                twilioPhoneNumber: "+1234567890", // You need a purchased number in Vapi/Twilio
+                twilioPhoneNumber: fromNumber,
                 customerPhoneNumber: lead.phone
             },
             assistantId: assistantId,
