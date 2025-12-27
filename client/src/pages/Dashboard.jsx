@@ -8,8 +8,6 @@ import {
     MessageSquare,
     Settings as SettingsIcon,
     LogOut,
-    Menu,
-    X,
     Filter,
     Download,
     Trash2,
@@ -22,62 +20,89 @@ import {
     XCircle,
     Clock,
     CreditCard,
-    TrendingUp
+    TrendingUp,
+    Zap,
+    LayoutDashboard,
+    ArrowUpRight,
+    MoreHorizontal
 } from 'lucide-react';
 import { format } from 'date-fns';
 import UserManagement from '../components/UserManagement';
 import AnalyticsCharts from '../components/AnalyticsCharts';
 import AIChatWidget from '../components/AIChatWidget';
 
-const socket = io('http://localhost:4000'); // Check port!
+const socket = io('http://localhost:4000');
 
-function StatCard({ title, value, icon: Icon, color, subtext }) {
+// --- Components ---
+
+function StatCard({ title, value, icon: Icon, color, subtext, trend }) {
     return (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-            <div>
-                <p className="text-sm font-medium text-gray-500">{title}</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
-                {subtext && <p className="text-xs text-gray-400 mt-1">{subtext}</p>}
+        <div className="bg-white/80 backdrop-blur-xl p-6 rounded-2xl shadow-sm border border-white/20 hover:shadow-md transition-all duration-300 group relative overflow-hidden">
+            {/* Ambient Background Glow */}
+            <div className={`absolute top-0 right-0 w-32 h-32 ${color.replace('bg-', 'bg-').replace('500', '100')} rounded-full blur-3xl opacity-20 -mr-10 -mt-10 transition-opacity group-hover:opacity-40`}></div>
+
+            <div className="flex justify-between items-start relative z-10">
+                <div>
+                    <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">{title}</p>
+                    <div className="flex items-baseline gap-2 mt-2">
+                        <h3 className="text-3xl font-bold text-gray-900 tracking-tight">{value}</h3>
+                        {trend && (
+                            <span className="flex items-center text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                                <ArrowUpRight className="w-3 h-3 mr-0.5" /> {trend}
+                            </span>
+                        )}
+                    </div>
+                </div>
+                <div className={`p-3 rounded-xl ${color} shadow-lg shadow-indigo-500/20 text-white transform group-hover:scale-110 transition-transform`}>
+                    <Icon className="w-6 h-6" />
+                </div>
             </div>
-            <div className={`p-3 rounded-full ${color}`}>
-                <Icon className="w-6 h-6 text-white" />
-            </div>
+            {subtext && <p className="text-sm text-gray-400 mt-4 font-medium flex items-center gap-1">{subtext}</p>}
         </div>
     );
 }
 
 function StatusBadge({ status, type }) {
     const styles = {
-        sent: 'bg-green-100 text-green-700',
-        pending: 'bg-yellow-100 text-yellow-800',
-        failed: 'bg-red-100 text-red-700'
+        sent: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+        pending: 'bg-amber-100 text-amber-700 border-amber-200',
+        failed: 'bg-rose-100 text-rose-700 border-rose-200',
+        // Lead Statuses
+        New: 'bg-blue-50 text-blue-700 border-blue-200',
+        Contacted: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+        Interested: 'bg-teal-50 text-teal-700 border-teal-200',
+        Converted: 'bg-purple-50 text-purple-700 border-purple-200',
+        Lost: 'bg-slate-100 text-slate-600 border-slate-200'
     };
 
-    // Default to pending if unknown
     const statusKey = status || 'pending';
+    const cleanStatus = statusKey.charAt(0).toUpperCase() + statusKey.slice(1);
 
     return (
-        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${styles[statusKey] || 'bg-gray-100 text-gray-600'}`}>
-            {statusKey.toUpperCase()}
+        <span className={`px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide rounded-full border ${styles[statusKey] || 'bg-gray-100 text-gray-600 border-gray-200'}`}>
+            {cleanStatus}
         </span>
     );
 }
 
 function ScoreBadge({ score, reason }) {
-    if (score === undefined || score === null) return <span className="text-xs text-gray-400">-</span>;
+    if (score === undefined || score === null) return <span className="text-gray-300">-</span>;
 
-    let color = 'bg-red-100 text-red-800';
-    if (score >= 70) color = 'bg-green-100 text-green-800';
-    else if (score >= 40) color = 'bg-yellow-100 text-yellow-800';
+    let color = 'text-red-600 bg-red-50 border-red-100';
+    if (score >= 70) color = 'text-emerald-600 bg-emerald-50 border-emerald-100';
+    else if (score >= 40) color = 'text-amber-600 bg-amber-50 border-amber-100';
 
     return (
-        <div className="flex flex-col items-center group relative cursor-help">
-            <span className={`px-2 py-0.5 text-xs font-bold rounded ${color}`}>
-                {score}/100
-            </span>
+        <div className="group relative cursor-help inline-block">
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${color}`}>
+                <Zap className="w-3 h-3 fill-current" />
+                <span className="text-xs font-bold">{score}</span>
+            </div>
             {/* Tooltip */}
-            <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 bg-gray-800 text-white text-xs rounded p-2 z-50">
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-64 bg-slate-900 text-white text-xs rounded-lg p-3 shadow-xl z-50 pointer-events-none">
+                <div className="font-bold mb-1 border-b border-slate-700 pb-1">AI Reasoning</div>
                 {reason || 'No analysis available'}
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-slate-900"></div>
             </div>
         </div>
     );
@@ -85,7 +110,6 @@ function ScoreBadge({ score, reason }) {
 
 export default function Dashboard() {
     const [leads, setLeads] = useState([]);
-    // const [stats, setStats] = useState({ total: 0, emailSent: 0, whatsappSent: 0 }); // Replaced by analyticsData
     const [analyticsData, setAnalyticsData] = useState(null);
     const [team, setTeam] = useState([]);
     const [showTeamModal, setShowTeamModal] = useState(false);
@@ -93,15 +117,14 @@ export default function Dashboard() {
     const [filterStatus, setFilterStatus] = useState('');
     const [selectedLeads, setSelectedLeads] = useState([]);
 
-    // Get logged in user to check role
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const isAdmin = user.role === 'admin' || user.role === undefined; // Default to admin for legacy users
+    const isAdmin = user.role === 'admin' || user.role === undefined;
 
+    // --- Data Fetching & WebSockets (Same Logic, New UI) ---
     const fetchLeads = async () => {
         try {
             const data = await getLeads({ status: filterStatus });
             setLeads(data);
-            // calculateStats(data); // Using server analytics now
         } catch (error) {
             console.error('Failed to fetch leads', error);
             if (error.response && error.response.status === 401) logout();
@@ -128,21 +151,46 @@ export default function Dashboard() {
         }
     };
 
-    const handleCreateUser = async (e) => {
-        e.preventDefault();
-        try {
-            await createUser(newUser);
-            alert('Sales User Created!');
-            setShowTeamModal(false);
-            setNewUser({ name: '', email: '', password: '' });
-            fetchTeam();
-        } catch (error) {
-            console.error('Create user error:', error);
-            const msg = error.response?.data?.message || error.message || 'Failed to create user';
-            alert(`Error: ${msg}`);
-        }
-    };
+    useEffect(() => {
+        fetchLeads();
+        fetchAnalytics();
+        fetchTeam();
 
+        socket.on('new_lead', (newLead) => {
+            setLeads((prev) => [newLead, ...prev]);
+            fetchAnalytics();
+        });
+
+        socket.on('update_lead', (updatedLead) => {
+            setLeads((prev) => prev.map(l => l._id === updatedLead._id ? updatedLead : l));
+            fetchAnalytics();
+        });
+
+        socket.on('delete_lead', (deletedId) => {
+            setLeads((prev) => prev.filter(l => l._id !== deletedId));
+            setSelectedLeads(prev => prev.filter(id => id !== deletedId));
+            fetchAnalytics();
+        });
+
+        socket.on('bulk_delete', (deletedIds) => {
+            setLeads((prev) => prev.filter(l => !deletedIds.includes(l._id)));
+            setSelectedLeads(prev => prev.filter(id => !deletedIds.includes(id)));
+            fetchAnalytics();
+        });
+
+        return () => {
+            socket.off('new_lead');
+            socket.off('update_lead');
+            socket.off('delete_lead');
+        };
+    }, []);
+
+    useEffect(() => {
+        fetchLeads();
+    }, [filterStatus]);
+
+
+    // Handlers
     const handleAssign = async (leadId, userId) => {
         try {
             await assignLead(leadId, userId);
@@ -157,41 +205,36 @@ export default function Dashboard() {
             // Optimistic update
             setLeads(prev => prev.map(l => l._id === id ? { ...l, status: newStatus } : l));
             await updateLeadStatus(id, newStatus);
-            fetchAnalytics(); // Refresh stats
+            fetchAnalytics();
         } catch (error) {
             console.error('Status update failed', error);
-            fetchLeads(); // Revert on fail
+            fetchLeads();
         }
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this lead? This cannot be undone.")) return;
+        if (!window.confirm("Are you sure you want to delete this lead?")) return;
         try {
             await deleteLead(id);
-            // Optimistic update
             setLeads(prev => prev.filter(l => l._id !== id));
             setSelectedLeads(prev => prev.filter(lid => lid !== id));
             fetchAnalytics();
         } catch (error) {
             console.error('Delete failed', error);
-            alert('Failed to delete lead');
         }
     };
 
     const handleBulkDelete = async () => {
         if (selectedLeads.length === 0) return;
-        if (!window.confirm(`Are you sure you want to delete ${selectedLeads.length} leads? This cannot be undone.`)) return;
+        if (!window.confirm(`Delete ${selectedLeads.length} leads?`)) return;
 
         try {
             await deleteLeads(selectedLeads);
-            // Optimistic removal
             setLeads(prev => prev.filter(l => !selectedLeads.includes(l._id)));
             setSelectedLeads([]);
             fetchAnalytics();
-            alert('Leads deleted successfully');
         } catch (error) {
             console.error('Bulk delete failed', error);
-            alert('Failed to delete leads');
         }
     };
 
@@ -233,196 +276,202 @@ export default function Dashboard() {
         document.body.removeChild(link);
     };
 
-    useEffect(() => {
-        fetchLeads();
-        fetchAnalytics(); // Fetch initial analytics
-        fetchTeam();
-
-        socket.on('new_lead', (newLead) => {
-            setLeads((prev) => [newLead, ...prev]);
-            fetchAnalytics();
-        });
-
-        socket.on('update_lead', (updatedLead) => {
-            setLeads((prev) => prev.map(l => l._id === updatedLead._id ? updatedLead : l));
-            fetchAnalytics();
-        });
-
-        socket.on('delete_lead', (deletedId) => {
-            setLeads((prev) => prev.filter(l => l._id !== deletedId));
-            setSelectedLeads(prev => prev.filter(id => id !== deletedId));
-            fetchAnalytics();
-        });
-
-        socket.on('bulk_delete', (deletedIds) => {
-            setLeads((prev) => prev.filter(l => !deletedIds.includes(l._id)));
-            setSelectedLeads(prev => prev.filter(id => !deletedIds.includes(id)));
-            fetchAnalytics();
-        });
-
-        return () => {
-            socket.off('new_lead');
-            socket.off('update_lead');
-            socket.off('delete_lead');
-        };
-    }, []);
-
-    // Re-fetch when filter changes
-    useEffect(() => {
-        fetchLeads();
-    }, [filterStatus]);
-
-    // Check for onboarding status
     const [setupRequired, setSetupRequired] = useState(false);
-
     useEffect(() => {
         const checkSetup = async () => {
-            // We can use getSettings to check if Meta is connected
-            // Ideally this should be a dedicated endpoint or part of /me, but this works
-            try {
-                // Keep it lightweight - if we already fetched something else indicating status use that
-                // Here we'll do a quick check
-                if (isAdmin) {
+            if (isAdmin) {
+                try {
                     const settings = await getSettings();
                     if (!settings.metaAccessToken || !settings.pageId) {
                         setSetupRequired(true);
                     }
+                } catch (e) {
+                    // Ignore
                 }
-            } catch (e) {
-                // If it fails (e.g. 404 for super admin or network), ignore or handle
-                console.log('Setup check skipped', e);
             }
         };
         checkSetup();
     }, [isAdmin]);
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Setup Guide Banner */}
-            {setupRequired && (
-                <div className="bg-indigo-600 text-white px-6 py-3 shadow-md">
-                    <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-                        <div className="flex flex-col sm:flex-row items-center gap-3 text-center md:text-left">
-                            <span className="bg-white text-indigo-600 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider shrink-0">Get Started</span>
-                            <p className="text-sm font-medium">Your account is not fully configured. Connect your Facebook Page to start receiving leads.</p>
-                        </div>
-                        <Link to="/settings" className="w-full md:w-auto text-center text-sm font-bold bg-indigo-500 hover:bg-indigo-400 px-4 py-1.5 rounded transition shrink-0">
-                            Go to Settings &rarr;
-                        </Link>
-                    </div>
-                </div>
-            )}
+        <div className="min-h-screen bg-slate-50 font-sans text-slate-900 overflow-x-hidden selection:bg-indigo-100 selection:text-indigo-900">
+            {/* Dynamic Background */}
+            <div className="fixed top-0 left-0 w-full h-full pointer-events-none -z-10 overflow-hidden">
+                <div className="absolute top-[-100px] right-[-100px] w-96 h-96 bg-indigo-200 rounded-full blur-[100px] opacity-20 animate-pulse"></div>
+                <div className="absolute bottom-[-100px] left-[-100px] w-96 h-96 bg-blue-200 rounded-full blur-[100px] opacity-20"></div>
+            </div>
 
-            {/* Navbar */}
-            <nav className="bg-white shadow-sm border-b px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 sticky top-0 z-40">
-                <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">M</div>
-                    WKPC Meta Automation
-                </h1>
-                <div className="flex flex-wrap justify-center items-center gap-4">
-                    {isAdmin && (
-                        <button onClick={() => setShowTeamModal(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition">
-                            <Plus className="w-4 h-4" /> Manage Team
-                        </button>
-                    )}
-                    <Link to="/workflows" className="flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">
-                        <Users className="w-5 h-5 mr-1" /> {/* Reusing Users icon or similar until imported */}
-                        Automation
-                    </Link>
-                    <Link to="/billing" className="flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">
-                        <CreditCard className="w-5 h-5 mr-1" />
-                        Billing
-                    </Link>
-                    <Link to="/settings" className="flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">
-                        <SettingsIcon className="w-5 h-5 mr-1" />
-                        Settings
-                    </Link>
-                    <Link to="/profile" className="flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">
-                        <UserCircle className="w-5 h-5 mr-1" />
-                        Profile
-                    </Link>
-                    <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-100 px-3 py-1.5 rounded-lg">
-                        <Shield className="w-4 h-4 text-blue-600" />
-                        <span className="font-semibold">{user.name || 'Admin'}</span>
-                        <span className="text-xs uppercase bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">{user.role || 'Admin'}</span>
+            {/* Sticky Navbar */}
+            <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all duration-300">
+                <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="bg-indigo-600 rounded-lg p-1.5 shadow-lg shadow-indigo-500/30">
+                            <LayoutDashboard className="w-6 h-6 text-white" />
+                        </div>
+                        <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600 tracking-tight">
+                            WKPC Meta Automation
+                        </h1>
                     </div>
-                    <button onClick={logout} className="text-gray-500 hover:text-red-600 transition flex items-center gap-2 text-sm font-medium">
-                        <LogOut className="w-4 h-4" /> Logout
-                    </button>
+
+                    <div className="flex items-center gap-2 md:gap-6 bg-slate-50 md:bg-transparent p-1 md:p-0 rounded-full md:rounded-none">
+                        <div className="flex items-center gap-1">
+                            <Link to="/workflows" className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all">
+                                <Zap className="w-4 h-4" /> <span className="hidden sm:inline">Workflows</span>
+                            </Link>
+                            <Link to="/billing" className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all">
+                                <CreditCard className="w-4 h-4" /> <span className="hidden sm:inline">Billing</span>
+                            </Link>
+                            <Link to="/settings" className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all">
+                                <SettingsIcon className="w-4 h-4" /> <span className="hidden sm:inline">Settings</span>
+                            </Link>
+                        </div>
+
+                        <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
+
+                        <div className="flex items-center gap-3 pl-2">
+                            <div className="flex flex-col items-end hidden sm:flex">
+                                <span className="text-sm font-bold text-slate-800">{user.name || 'Admin'}</span>
+                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider text-right">{user.role || 'Admin'}</span>
+                            </div>
+                            <div className="h-9 w-9 bg-indigo-100 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                                <UserCircle className="w-5 h-5 text-indigo-600" />
+                            </div>
+                            <button onClick={logout} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors ml-1" title="Logout">
+                                <LogOut className="w-5 h-5" />
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </nav>
 
-            {/* Team Modal */}
-            <UserManagement
-                isOpen={showTeamModal}
-                onClose={() => setShowTeamModal(false)}
-                onUserCreated={fetchTeam}
-            />
-
-            <main className="p-6 max-w-7xl mx-auto">
-                {/* Analytics Section */}
-                {analyticsData && (
-                    <>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                            <StatCard
-                                title="Total Leads"
-                                value={analyticsData.summary.totalLeads}
-                                icon={Users}
-                                color="bg-blue-500"
-                                subtext="All time"
-                            />
-                            <StatCard
-                                title="Converted Leads"
-                                value={analyticsData.summary.convertedLeads}
-                                icon={CheckCircle}
-                                color="bg-green-500"
-                                subtext={`${analyticsData.summary.conversionRate}% Conversion Rate`}
-                            />
-                            <StatCard
-                                title="Recent Activity"
-                                value={analyticsData.leadsOverTime.reduce((acc, curr) => acc + curr.count, 0)}
-                                icon={TrendingUp}
-                                color="bg-purple-600"
-                                subtext="Last 30 days"
-                            />
+            {/* Banner */}
+            {setupRequired && (
+                <div className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-lg mx-6 mt-6 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 max-w-7xl mx-auto animate-fade-in-down">
+                    <div className="flex items-center gap-4">
+                        <div className="p-2 bg-white/20 rounded-full animate-pulse">
+                            <SettingsIcon className="w-5 h-5" />
                         </div>
+                        <div>
+                            <p className="font-bold text-sm md:text-base">Complete your configuration</p>
+                            <p className="text-xs md:text-sm text-indigo-100 opacity-90">Connect your Facebook Page to start receiving leads automatically.</p>
+                        </div>
+                    </div>
+                    <Link to="/settings" className="whitespace-nowrap bg-white text-indigo-600 px-5 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-indigo-50 transition-transform transform hover:-translate-y-0.5">
+                        Finish Setup &rarr;
+                    </Link>
+                </div>
+            )}
 
-                        {/* Charts */}
-                        <AnalyticsCharts data={analyticsData} />
-                    </>
+            <main className="max-w-7xl mx-auto p-6 md:p-8 space-y-8">
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row justify-between items-end gap-6">
+                    <div>
+                        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Dashboard Overview</h2>
+                        <p className="text-slate-500 mt-1">Real-time insights and lead management.</p>
+                    </div>
+                    {isAdmin && (
+                        <button
+                            onClick={() => setShowTeamModal(true)}
+                            className="bg-slate-900 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-slate-900/20 hover:bg-slate-800 transition-all flex items-center gap-2 text-sm font-semibold"
+                        >
+                            <Plus className="w-4 h-4" /> Invite Team Member
+                        </button>
+                    )}
+                </div>
+
+                {/* Stats Grid */}
+                {analyticsData && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <StatCard
+                            title="Total Leads"
+                            value={analyticsData.summary.totalLeads}
+                            icon={Users}
+                            color="bg-blue-500"
+                        // trend={analyticsData.summary.totalLeads > 0 ? "+ Realtime" : null} 
+                        />
+                        <StatCard
+                            title="Converted"
+                            value={analyticsData.summary.convertedLeads}
+                            icon={CheckCircle}
+                            color="bg-emerald-500"
+                            trend={analyticsData.summary.totalLeads > 0 ? `${analyticsData.summary.conversionRate}% Rate` : null}
+                        />
+                        <StatCard
+                            title="AI Processed"
+                            // Using total leads as proxy for AI processed since all leads are handled by the system
+                            value={analyticsData.summary.totalLeads}
+                            icon={Zap}
+                            color="bg-purple-600"
+                            subtext="Automated Interactions"
+                        />
+                    </div>
                 )}
 
-                {/* Leads Table Container */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
-                        <h2 className="text-lg font-bold text-gray-800">Recent Leads</h2>
-                        <div className="flex items-center gap-3">
-                            <select
-                                value={filterStatus}
-                                onChange={(e) => setFilterStatus(e.target.value)}
-                                className="text-sm border-gray-200 rounded-lg focus:ring-blue-500"
-                            >
-                                <option value="">All Statuses</option>
-                                <option value="New">New</option>
-                                <option value="Contacted">Contacted</option>
-                                <option value="Interested">Interested</option>
-                                <option value="Converted">Converted</option>
-                                <option value="Lost">Lost</option>
+                {/* Charts Section */}
+                {analyticsData && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                                <TrendingUp className="w-5 h-5 text-indigo-500" />
+                                Growth Analytics
+                            </h3>
+                            <select className="bg-slate-50 border-none text-xs font-semibold text-slate-500 rounded-lg py-1 px-3">
+                                <option>Last 30 Days</option>
+                                <option>Last 7 Days</option>
                             </select>
-                            <button onClick={() => { fetchLeads(); fetchAnalytics(); }} className="p-2 hover:bg-gray-100 rounded-full transition text-gray-600">
-                                <RefreshCw className="w-5 h-5" />
+                        </div>
+                        <AnalyticsCharts data={analyticsData} />
+                    </div>
+                )}
+
+                {/* Leads Table Card */}
+                <div className="bg-white rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-100 overflow-hidden">
+                    {/* Table Header / Toolbar */}
+                    <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-white/50 backdrop-blur-sm">
+                        <div className="flex items-center gap-2">
+                            <h3 className="font-bold text-slate-800">Recent Leads</h3>
+                            <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold">{leads.length}</span>
+                        </div>
+
+                        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                            {/* Filter */}
+                            <div className="relative group">
+                                <Filter className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                                <select
+                                    value={filterStatus}
+                                    onChange={(e) => setFilterStatus(e.target.value)}
+                                    className="pl-9 pr-8 py-2 text-sm border border-slate-200 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 hover:bg-white transition-colors cursor-pointer appearance-none min-w-[140px]"
+                                >
+                                    <option value="">All Statuses</option>
+                                    <option value="New">New</option>
+                                    <option value="Contacted">Contacted</option>
+                                    <option value="Interested">Interested</option>
+                                    <option value="Converted">Converted</option>
+                                    <option value="Lost">Lost</option>
+                                </select>
+                            </div>
+
+                            <button
+                                onClick={() => { fetchLeads(); fetchAnalytics(); }}
+                                className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100"
+                                title="Refresh"
+                            >
+                                <RefreshCw className="w-4 h-4" />
                             </button>
+
+                            <div className="h-6 w-px bg-slate-200 mx-1"></div>
+
                             <button
                                 onClick={handleExport}
-                                className="p-2 hover:bg-gray-100 rounded-full transition text-gray-600"
-                                title="Export to Excel"
+                                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm"
                             >
-                                <Download className="w-5 h-5" />
+                                <Download className="w-4 h-4" /> <span className="hidden sm:inline">Export</span>
                             </button>
+
                             {selectedLeads.length > 0 && isAdmin && (
                                 <button
                                     onClick={handleBulkDelete}
-                                    className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-red-600 transition"
+                                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 shadow-sm transition-colors animate-pulse"
                                 >
                                     <Trash2 className="w-4 h-4" /> Delete ({selectedLeads.length})
                                 </button>
@@ -431,118 +480,143 @@ export default function Dashboard() {
                     </div>
 
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead className="bg-gray-50 text-gray-600 text-xs uppercase font-semibold">
-                                <tr>
-                                    <th className="px-6 py-4">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-slate-50/50 text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
+                                    <th className="p-4 w-12 text-center">
                                         <input
                                             type="checkbox"
-                                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                                             checked={leads.length > 0 && selectedLeads.length === leads.length}
                                             onChange={toggleSelectAll}
                                         />
                                     </th>
-                                    <th className="px-6 py-4">Name</th>
-                                    <th className="px-6 py-4">Contact</th>
-                                    <th className="px-6 py-4">Date</th>
-                                    <th className="px-6 py-4">Status</th>
-                                    <th className="px-6 py-4 text-center">AI Score</th>
-                                    {isAdmin && <th className="px-6 py-4">Assigned To</th>}
-                                    <th className="px-6 py-4 text-center">Email</th>
-                                    <th className="px-6 py-4 text-center">WhatsApp</th>
-                                    <th className="px-6 py-4">Actions</th>
+                                    <th className="p-4">Lead Details</th>
+                                    <th className="p-4">Status</th>
+                                    <th className="p-4 text-center">AI Score</th>
+                                    <th className="p-4">Comms</th>
+                                    {isAdmin && <th className="p-4">Assignee</th>}
+                                    <th className="p-4 text-right">Added</th>
+                                    <th className="p-4"></th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {leads.map((lead) => (
-                                    <tr key={lead._id} className="hover:bg-gray-50 transition">
-                                        <td className="px-6 py-4">
-                                            <input
-                                                type="checkbox"
-                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                                checked={selectedLeads.includes(lead._id)}
-                                                onChange={() => toggleSelect(lead._id)}
-                                            />
-                                        </td>
-                                        <td className="px-6 py-4 font-medium text-gray-900">{lead.name}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">
-                                            <div className="flex flex-col">
-                                                <span>{lead.email}</span>
-                                                <span className="text-xs text-gray-400">{lead.phone}</span>
+                            <tbody className="divide-y divide-slate-100">
+                                {leads.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="8" className="p-12 text-center">
+                                            <div className="flex flex-col items-center justify-center text-slate-400">
+                                                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                                                    <Users className="w-8 h-8 opacity-50" />
+                                                </div>
+                                                <p className="text-lg font-medium text-slate-600">No leads found</p>
+                                                <p className="text-sm">Connect your Facebook page or wait for new leads.</p>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">
-                                            {format(new Date(lead.createdAt), 'MMM dd, HH:mm')}
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <select
-                                                value={lead.status || 'New'}
-                                                onChange={(e) => handleStatusChange(lead._id, e.target.value)}
-                                                className={`text-xs font-bold px-2 py-1 rounded-full border-none focus:ring-2 focus:ring-blue-500 cursor-pointer ${lead.status === 'New' ? 'bg-blue-100 text-blue-800' :
-                                                    lead.status === 'Contacted' ? 'bg-yellow-100 text-yellow-800' :
-                                                        lead.status === 'Interested' ? 'bg-green-100 text-green-800' :
-                                                            lead.status === 'Converted' ? 'bg-purple-100 text-purple-800' :
-                                                                'bg-red-100 text-red-800'
-                                                    }`}
-                                            >
-                                                <option value="New">New</option>
-                                                <option value="Contacted">Contacted</option>
-                                                <option value="Interested">Interested</option>
-                                                <option value="Converted">Converted</option>
-                                                <option value="Lost">Lost</option>
-                                                <option value="Lost">Lost</option>
-                                            </select>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <ScoreBadge score={lead.leadScore} reason={lead.scoreReason} />
-                                        </td>
-                                        {isAdmin && (
-                                            <td className="px-6 py-4">
+                                    </tr>
+                                ) : (
+                                    leads.map((lead) => (
+                                        <tr key={lead._id} className="hover:bg-slate-50/80 transition-colors group">
+                                            <td className="p-4 text-center">
+                                                <input
+                                                    type="checkbox"
+                                                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer opacity-50 group-hover:opacity-100 transition-opacity"
+                                                    checked={selectedLeads.includes(lead._id)}
+                                                    onChange={() => toggleSelect(lead._id)}
+                                                />
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                                                        {lead.name.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-bold text-slate-900">{lead.name}</p>
+                                                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                                                            <Mail className="w-3 h-3" /> {lead.email}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="p-4">
                                                 <select
-                                                    value={lead.assignedTo?._id || ''}
-                                                    onChange={(e) => handleAssign(lead._id, e.target.value)}
-                                                    className="w-full text-xs border-gray-200 rounded-lg"
+                                                    value={lead.status || 'New'}
+                                                    onChange={(e) => handleStatusChange(lead._id, e.target.value)}
+                                                    className={`text-xs font-bold px-2 py-1 rounded-full border-none focus:ring-2 focus:ring-indigo-500 cursor-pointer appearance-none text-center min-w-[100px]
+                                                        ${lead.status === 'New' ? 'bg-blue-100 text-blue-800' :
+                                                            lead.status === 'Contacted' ? 'bg-indigo-100 text-indigo-800' :
+                                                                lead.status === 'Interested' ? 'bg-emerald-100 text-emerald-800' :
+                                                                    lead.status === 'Converted' ? 'bg-purple-100 text-purple-800' :
+                                                                        'bg-red-100 text-red-800'}`}
                                                 >
-                                                    <option value="">Unassigned</option>
-                                                    {team.map(t => (
-                                                        <option key={t._id} value={t._id}>{t.name}</option>
-                                                    ))}
+                                                    <option value="New">NEW</option>
+                                                    <option value="Contacted">CONTACTED</option>
+                                                    <option value="Interested">INTERESTED</option>
+                                                    <option value="Converted">CONVERTED</option>
+                                                    <option value="Lost">LOST</option>
                                                 </select>
                                             </td>
-                                        )}
-                                        <td className="px-6 py-4 text-center">
-                                            <StatusBadge status={lead.emailStatus} type="email" />
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <StatusBadge status={lead.whatsappStatus} type="whatsapp" />
-                                        </td>
-                                        <td className="px-6 py-4 flex items-center gap-3">
-                                            <a href={`/leads/${lead._id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">View</a>
+                                            <td className="p-4 text-center">
+                                                <ScoreBadge score={lead.leadScore} reason={lead.scoreReason} />
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="tooltip" title={`Email: ${lead.emailStatus}`}>
+                                                        <StatusBadge status={lead.emailStatus} type="email" />
+                                                    </div>
+                                                    {/* Add WhatsApp if needed explicitly or simplify */}
+                                                </div>
+                                            </td>
                                             {isAdmin && (
-                                                <button
-                                                    onClick={() => handleDelete(lead._id)}
-                                                    className="text-gray-400 hover:text-red-600 transition"
-                                                    title="Delete Lead"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
+                                                <td className="p-4">
+                                                    <select
+                                                        value={lead.assignedTo?._id || ''}
+                                                        onChange={(e) => handleAssign(lead._id, e.target.value)}
+                                                        className="text-xs border-transparent bg-transparent hover:bg-white hover:border-slate-200 rounded-lg focus:ring-indigo-500 text-slate-600 font-medium py-1 px-2 transition-all w-32 truncate"
+                                                    >
+                                                        <option value="">Unassigned</option>
+                                                        {team.map(t => (
+                                                            <option key={t._id} value={t._id}>{t.name}</option>
+                                                        ))}
+                                                    </select>
+                                                </td>
                                             )}
-                                        </td>
-                                    </tr>
-                                ))}
-                                {leads.length === 0 && (
-                                    <tr>
-                                        <td colSpan="8" className="px-6 py-12 text-center text-gray-400">
-                                            No leads found yet.
-                                        </td>
-                                    </tr>
+                                            <td className="p-4 text-right text-xs text-slate-400 font-medium font-mono">
+                                                {format(new Date(lead.createdAt), 'MMM dd')}
+                                                <br />
+                                                {format(new Date(lead.createdAt), 'HH:mm')}
+                                            </td>
+                                            <td className="p-4 text-right">
+                                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Link to={`/leads/${lead._id}`} className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Details">
+                                                        <ArrowUpRight className="w-4 h-4" />
+                                                    </Link>
+                                                    {isAdmin && (
+                                                        <button
+                                                            onClick={() => handleDelete(lead._id)}
+                                                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                            title="Delete"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
                                 )}
                             </tbody>
                         </table>
                     </div>
                 </div>
-                <AIChatWidget />
             </main>
+
+            {/* Modals & Overlays */}
+            <UserManagement
+                isOpen={showTeamModal}
+                onClose={() => setShowTeamModal(false)}
+                onUserCreated={fetchTeam}
+            />
+            <AIChatWidget />
         </div>
     );
 }

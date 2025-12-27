@@ -1,25 +1,69 @@
 const router = require('express').Router();
 const passport = require('passport');
-const { generateToken } = require('../controllers/authController'); // Assuming you export this or duplicate logic
+const jwt = require('jsonwebtoken');
+const config = require('../config');
 
-// NOTE: To enable, mount this router in server.js: app.use('/auth', ssoRoutes);
+// Generate JWT token
+const generateToken = (userId) => {
+    return jwt.sign({ id: userId }, config.jwtSecret, { expiresIn: '30d' });
+};
 
-/*
-// Auth with Google
+// ============================================
+// GOOGLE OAUTH ROUTES
+// ============================================
+
+// Initiate Google OAuth
 router.get('/google', passport.authenticate('google', {
     scope: ['profile', 'email']
 }));
 
-// Callback route for Google to redirect to
-router.get('/google/redirect', passport.authenticate('google'), (req, res) => {
-    // User is now logged in (req.user)
-    // Generate JWT
-    const token = generateToken(req.user._id);
-    
-    // Redirect to Frontend with Token
-    // In production, send via HTTPOnly cookie or a temporary code
-    res.redirect(`http://localhost:5173/login?token=${token}`);
-});
-*/
+// Google OAuth Callback
+router.get('/google/callback',
+    passport.authenticate('google', {
+        failureRedirect: `${config.clientUrl}/login?error=oauth_failed`,
+        session: false
+    }),
+    (req, res) => {
+        try {
+            // User is authenticated (req.user)
+            const token = generateToken(req.user._id);
+
+            // Redirect to frontend with token
+            res.redirect(`${config.clientUrl}/oauth/callback?token=${token}&provider=google`);
+        } catch (error) {
+            console.error('Google callback error:', error);
+            res.redirect(`${config.clientUrl}/login?error=server_error`);
+        }
+    }
+);
+
+// ============================================
+// MICROSOFT OAUTH ROUTES
+// ============================================
+
+// Initiate Microsoft OAuth
+router.get('/microsoft', passport.authenticate('microsoft', {
+    scope: ['user.read']
+}));
+
+// Microsoft OAuth Callback
+router.get('/microsoft/callback',
+    passport.authenticate('microsoft', {
+        failureRedirect: `${config.clientUrl}/login?error=oauth_failed`,
+        session: false
+    }),
+    (req, res) => {
+        try {
+            // User is authenticated (req.user)
+            const token = generateToken(req.user._id);
+
+            // Redirect to frontend with token
+            res.redirect(`${config.clientUrl}/oauth/callback?token=${token}&provider=microsoft`);
+        } catch (error) {
+            console.error('Microsoft callback error:', error);
+            res.redirect(`${config.clientUrl}/login?error=server_error`);
+        }
+    }
+);
 
 module.exports = router;

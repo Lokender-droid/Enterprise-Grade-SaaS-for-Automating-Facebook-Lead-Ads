@@ -29,8 +29,13 @@ export default function Login() {
     };
 
     const handleGoogleLogin = () => {
-        // Placeholder for Google OAuth logic
-        alert("Google Login requires a Client ID. Please configure it in the Production Setup.");
+        // Redirect to backend Google OAuth endpoint
+        window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/auth/google`;
+    };
+
+    const handleMicrosoftLogin = () => {
+        // Redirect to backend Microsoft OAuth endpoint
+        window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/auth/microsoft`;
     };
 
     return (
@@ -131,15 +136,32 @@ export default function Login() {
                         </div>
                     </div>
 
-                    <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={handleGoogleLogin}
-                        className="mt-6 w-full bg-white text-gray-900 py-3 rounded-xl font-medium shadow-sm hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
-                    >
-                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
-                        Sign in with Google
-                    </motion.button>
+                    <div className="mt-6 grid grid-cols-2 gap-3">
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={handleGoogleLogin}
+                            className="w-full bg-white text-gray-900 py-3 rounded-xl font-medium shadow-sm hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+                        >
+                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
+                            Google
+                        </motion.button>
+
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={handleMicrosoftLogin}
+                            className="w-full bg-white text-gray-900 py-3 rounded-xl font-medium shadow-sm hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+                        >
+                            <svg className="w-5 h-5" viewBox="0 0 23 23" fill="none">
+                                <path d="M0 0h11v11H0V0z" fill="#f25022" />
+                                <path d="M12 0h11v11H12V0z" fill="#00a4ef" />
+                                <path d="M0 12h11v11H0V12z" fill="#7fba00" />
+                                <path d="M12 12h11v11H12V12z" fill="#ffb900" />
+                            </svg>
+                            Microsoft
+                        </motion.button>
+                    </div>
 
                     <div className="mt-8 text-center text-sm">
                         <p className="text-slate-400">

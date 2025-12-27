@@ -3,24 +3,27 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
 const AdminSchema = new mongoose.Schema({
-    name: { type: String, required: true, default: 'Admin' },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    role: {
-        type: String,
-        // enum: ['super_admin', 'admin', 'manager', 'agent'], // Relaxed for Custom Enterprise Roles
-        default: 'admin'
-    },
-    organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' }, // Link user to an Org
+    password: { type: String }, // Optional for OAuth users
+    name: { type: String, required: true },
+    role: { type: String, enum: ['admin', 'manager', 'agent', 'super_admin'], default: 'agent' },
+    organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true }, // Link user to an Org
+
+    // OAuth Fields
+    googleId: { type: String, sparse: true, unique: true },
+    microsoftId: { type: String, sparse: true, unique: true },
+    oauthProvider: { type: String, enum: ['email', 'google', 'microsoft'], default: 'email' },
+    profilePicture: { type: String },
+    emailVerified: { type: Boolean, default: false },
     loginAttempts: { type: Number, required: true, default: 0 },
     lockUntil: { type: Number },
     resetPasswordToken: String,
     resetPasswordExpire: Date
 });
 
-// Hash password before saving
+// Hash password before saving (skip for OAuth users)
 AdminSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) return next();
+    if (!this.isModified('password') || !this.password) return next();
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
     next();

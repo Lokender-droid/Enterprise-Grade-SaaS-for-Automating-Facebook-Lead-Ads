@@ -17,4 +17,9 @@ router.put('/', protect, organizationController.updateSettings);
 router.post('/verify-connection', organizationController.verifyConnection);
 router.post('/auto-configure', protect, organizationController.autoConfigureWebhooks); // Protect this!
 
+// White-Labeling Routes
+router.post('/verify-domain', protect, organizationController.verifyCustomDomain);
+router.get('/dns-instructions', protect, organizationController.getDNSInstructions);
+router.delete('/custom-domain', protect, organizationController.removeCustomDomain);
+
 module.exports = router;

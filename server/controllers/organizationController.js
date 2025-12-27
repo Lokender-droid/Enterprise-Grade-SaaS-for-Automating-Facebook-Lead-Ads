@@ -1,212 +1,169 @@
 const Organization = require('../models/Organization');
+const axios = require('axios');
+const config = require('../config');
 
-// GET /api/organization/settings
+// Get Organization Settings
 exports.getSettings = async (req, res) => {
     try {
-        console.log('getSettings Controller called for user:', req.user._id, 'OrgID:', req.user.organizationId);
-        // Check if user has an organization
-        let org;
-        if (!req.user.organizationId) {
-            // If Super Admin, try to fetch the first organization for Demo purposes
-            if (req.user.role === 'super_admin') {
-                org = await Organization.findOne();
-            }
+        console.log('getSettings called for user:', req.user);
 
-            if (!org) {
-                return res.json({
-                    name: '',
-                    email: req.user.email || '',
-                    // ... defaults
-                });
-            }
-        } else {
+        // Handle super-admin or users without organizationId
+        let org;
+        if (req.user.organizationId) {
             org = await Organization.findById(req.user.organizationId);
+        } else {
+            // For super-admin or demo users, get first organization
+            org = await Organization.findOne();
         }
 
         if (!org) {
-            console.log('Organization not found for ID:', req.user.organizationId);
             return res.status(404).json({ message: 'Organization not found' });
         }
 
-        // Return details but mask sensitive keys for security UI display
-        // or return them if needed for editing (usually we mask parts)
-        res.json({
-            name: org.name,
-            email: org.email,
-            pageId: org.pageId,
-            whatsappPhoneId: org.whatsappPhoneId,
-            logo: org.logo,
-            // Masking secrets for security best practices
-            metaAccessToken: org.metaAccessToken ? '****************' : '',
-            sendgridApiKey: org.sendgridApiKey ? '****************' : '',
-            fromEmail: org.fromEmail,
+        // Mask sensitive keys before sending
+        const safeOrg = org.toObject();
+        if (safeOrg.metaAccessToken) safeOrg.metaAccessToken = '****';
+        if (safeOrg.sendgridApiKey) safeOrg.sendgridApiKey = '****';
+        if (safeOrg.vapiPrivateKey) safeOrg.vapiPrivateKey = '****';
+        if (safeOrg.vapiPublicKey) safeOrg.vapiPublicKey = '****';
+        if (safeOrg.openaiApiKey) safeOrg.openaiApiKey = '****';
 
-            // Advanced AI Keys (Masked)
-            vapiPrivateKey: org.vapiPrivateKey ? '****************' : '',
-            vapiPublicKey: org.vapiPublicKey ? '****************' : '',
-            vapiAssistantId: org.vapiAssistantId ? '****************' : '',
-            vapiPhoneNumber: org.vapiPhoneNumber || '',
-            openaiApiKey: org.openaiApiKey ? '****************' : '',
+        // Mask OAuth secrets
+        if (safeOrg.ssoSettings) {
+            if (safeOrg.ssoSettings.googleClientSecret) safeOrg.ssoSettings.googleClientSecret = '****';
+            if (safeOrg.ssoSettings.microsoftClientSecret) safeOrg.ssoSettings.microsoftClientSecret = '****';
+        }
 
-            // Enterprise
-            customDomain: org.customDomain || '',
-            customRoles: org.customRoles || [],
-            ssoSettings: org.ssoSettings || { provider: 'none', enabled: false },
-            integrations: org.integrations || { salesforce: { connected: false }, hubspot: { connected: false } }
-        });
+        res.json(safeOrg);
     } catch (error) {
+        console.error('Error in getSettings:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
 
-// PUT /api/organization/settings
+// Update Organization Settings
 exports.updateSettings = async (req, res) => {
     try {
-        const {
-            name,
-            pageId,
-            whatsappPhoneId,
-            metaAccessToken,
-            sendgridApiKey,
-            fromEmail,
-            deleteLogo,
-            // AI Keys
-            vapiPrivateKey,
-            vapiPublicKey,
-            vapiAssistantId,
-            vapiPhoneNumber,
-            openaiApiKey,
-
-            // Enterprise
-            customDomain,
-            customRoles,
-            ssoSettings,
-            integrations
-        } = req.body;
-
-        let org;
-        if (!req.user.organizationId) {
-            if (req.user.role === 'super_admin') {
-                org = await Organization.findOne();
-
-                // Auto-create Demo Org if missing (Self-healing)
-                if (!org) {
-                    console.log("Auto-creating Default Organization for Super Admin");
-                    org = await Organization.create({
-                        name: 'MetaLead Demo Enterprise',
-                        email: 'admin@metalead.com',
-                        plan: 'enterprise',
-                        isActive: true
-                    });
-                }
-            }
-        } else {
-            org = await Organization.findById(req.user.organizationId);
-        }
-
+        const org = await Organization.findById(req.user.organizationId);
         if (!org) {
             return res.status(404).json({ message: 'Organization not found' });
         }
 
-        // Update fields if provided (allow empty string for name)
-        if (name !== undefined) org.name = name;
-        if (pageId) org.pageId = pageId;
-        if (whatsappPhoneId) org.whatsappPhoneId = whatsappPhoneId;
-        if (fromEmail) org.fromEmail = fromEmail;
-
-        // Only update secrets if they are not the masked version
-        if (metaAccessToken && !metaAccessToken.includes('****')) {
-            org.metaAccessToken = metaAccessToken;
-        }
-        if (sendgridApiKey && !sendgridApiKey.includes('****')) {
-            org.sendgridApiKey = sendgridApiKey;
-        }
-
-        // Update AI Keys
-        // Update AI Keys
-        if (vapiPrivateKey !== undefined && !vapiPrivateKey.includes('****')) org.vapiPrivateKey = vapiPrivateKey;
-        if (vapiPublicKey !== undefined && !vapiPublicKey.includes('****')) org.vapiPublicKey = vapiPublicKey;
-        if (vapiAssistantId !== undefined && !vapiAssistantId.includes('****')) org.vapiAssistantId = vapiAssistantId;
-        if (vapiPhoneNumber !== undefined) org.vapiPhoneNumber = vapiPhoneNumber;
-        if (openaiApiKey !== undefined && !openaiApiKey.includes('****')) org.openaiApiKey = openaiApiKey;
-
-        // Enterprise Updates
-        if (customDomain !== undefined) org.customDomain = customDomain;
-        // Basic Role Update (Expects JSON array)
-        if (customRoles) {
-            try {
-                const roles = typeof customRoles === 'string' ? JSON.parse(customRoles) : customRoles;
-                org.customRoles = roles;
-            } catch (e) {
-                console.error("Failed to parse custom roles");
-            }
-        }
-
-        // Update SSO & Integrations (Direct Object replacement for now, simpler)
-        if (ssoSettings) {
-            try {
-                org.ssoSettings = typeof ssoSettings === 'string' ? JSON.parse(ssoSettings) : ssoSettings;
-            } catch (e) { }
-        }
-        if (integrations) {
-            try {
-                org.integrations = typeof integrations === 'string' ? JSON.parse(integrations) : integrations;
-            } catch (e) { }
-        }
-
-        // Handle Logo Upload
+        // Handle file upload (logo)
         if (req.file) {
-            // Delete old logo if exists (optional cleanup)
-            // if (org.logo) { ... delete old file ... }
-            org.logo = '/uploads/' + req.file.filename;
-        } else if (deleteLogo === 'true' || deleteLogo === true) {
-            org.logo = undefined;
+            org.logo = `/uploads/${req.file.filename}`;
+        }
+
+        // Update fields
+        const fields = [
+            'name', 'pageId', 'whatsappPhoneId', 'fromEmail',
+            'vapiAssistantId', 'vapiPhoneNumber', 'customDomain'
+        ];
+
+        fields.forEach(field => {
+            if (req.body[field] !== undefined) {
+                org[field] = req.body[field];
+            }
+        });
+
+        // Handle secret keys (only update if not masked)
+        const secretFields = {
+            metaAccessToken: req.body.metaAccessToken,
+            sendgridApiKey: req.body.sendgridApiKey,
+            vapiPrivateKey: req.body.vapiPrivateKey,
+            vapiPublicKey: req.body.vapiPublicKey,
+            openaiApiKey: req.body.openaiApiKey
+        };
+
+        Object.entries(secretFields).forEach(([key, value]) => {
+            if (value && value !== '****') {
+                org[key] = value;
+            }
+        });
+
+        // Handle customRoles (might be JSON string)
+        if (req.body.customRoles) {
+            org.customRoles = typeof req.body.customRoles === 'string'
+                ? JSON.parse(req.body.customRoles)
+                : req.body.customRoles;
+        }
+
+        // Handle SSO settings
+        if (req.body.ssoSettings) {
+            org.ssoSettings = typeof req.body.ssoSettings === 'string'
+                ? JSON.parse(req.body.ssoSettings)
+                : req.body.ssoSettings;
+        }
+
+        // Handle integrations
+        if (req.body.integrations) {
+            org.integrations = typeof req.body.integrations === 'string'
+                ? JSON.parse(req.body.integrations)
+                : req.body.integrations;
         }
 
         await org.save();
 
-        // Log Activity
-        const { logActivity } = require('../services/activityLogger');
-        await logActivity(req, 'UPDATE_SETTINGS', req.body, 'Organization', req.user.organizationId);
+        // Reconfigure OAuth if SSO settings were updated
+        if (req.body.ssoSettings) {
+            try {
+                const passport = require('../config/passport-setup');
+                if (passport.reconfigureOAuth) {
+                    await passport.reconfigureOAuth();
+                    console.log('✅ OAuth strategies reconfigured with new settings');
+                }
+            } catch (error) {
+                console.error('⚠️  Failed to reconfigure OAuth:', error);
+                // Don't fail the entire request if OAuth reconfiguration fails
+            }
+        }
 
-        res.json({ message: 'Settings updated successfully', org });
+        res.json({ message: 'Settings updated successfully' });
     } catch (error) {
-        console.error('Update Settings Error:', error);
+        console.error('Update settings error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
 
-// POST /api/organization/verify-connection
+// Verify Facebook Connection
 exports.verifyConnection = async (req, res) => {
     try {
         const org = await Organization.findById(req.user.organizationId);
-        if (!org || !org.metaAccessToken) {
-            return res.status(400).json({ message: 'No Meta Access Token found. Please save settings first.' });
+        if (!org || !org.metaAccessToken || !org.pageId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Missing Page ID or Access Token'
+            });
         }
 
-        // Test Meta API
-        // Using axios directly here to keep it simple, or reuse facebookService if refactored
-        const axios = require('axios');
-        try {
-            const response = await axios.get(`https://graph.facebook.com/v19.0/me?fields=id,name&access_token=${org.metaAccessToken}`);
-            res.json({
-                success: true,
-                message: 'Connection Successful!',
-                data: response.data
-            });
-        } catch (error) {
-            console.error('Meta Verification Failed:', error.response?.data || error.message);
-            res.status(400).json({
-                message: 'Connection Failed',
-                details: error.response?.data?.error?.message || error.message
-            });
-        }
+        // Test API call to Facebook
+        const response = await axios.get(
+            `https://graph.facebook.com/v21.0/${org.pageId}`,
+            {
+                params: {
+                    fields: 'name,access_token',
+                    access_token: org.metaAccessToken
+                }
+            }
+        );
+
+        res.json({
+            success: true,
+            message: 'Connection Successful',
+            pageName: response.data.name
+        });
 
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        console.error('Verification Failed:', error.response?.data || error.message);
+        res.status(400).json({
+            success: false,
+            message: 'Connection Failed',
+            details: error.response?.data?.error?.message || error.message
+        });
     }
 };
 
+// Auto-configure webhooks
 exports.autoConfigureWebhooks = async (req, res) => {
     try {
         const org = await Organization.findById(req.user.organizationId);
@@ -225,5 +182,56 @@ exports.autoConfigureWebhooks = async (req, res) => {
             message: 'Failed to configure webhooks',
             details: error.response?.data?.error?.message || error.message
         });
+    }
+};
+
+// ============================================
+// WHITE-LABELING ENDPOINTS
+// ============================================
+const domainService = require('../services/domainService');
+
+exports.verifyCustomDomain = async (req, res) => {
+    try {
+        const { customDomain } = req.body;
+        const organizationId = req.user.organizationId;
+
+        if (!customDomain) {
+            return res.status(400).json({ message: 'Custom domain is required' });
+        }
+
+        const result = await domainService.verifyDomain(customDomain, organizationId);
+
+        if (result.success) {
+            res.json({
+                success: true,
+                message: result.message,
+                verified: true
+            });
+        } else {
+            res.status(400).json(result);
+        }
+    } catch (error) {
+        console.error('Verify domain error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.getDNSInstructions = async (req, res) => {
+    try {
+        const { customDomain } = req.query;
+        const instructions = domainService.getDNSInstructions(customDomain);
+        res.json(instructions);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.removeCustomDomain = async (req, res) => {
+    try {
+        const organizationId = req.user.organizationId;
+        const result = await domainService.removeDomain(organizationId);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
     }
 };

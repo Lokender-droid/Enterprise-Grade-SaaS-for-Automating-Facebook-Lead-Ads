@@ -11,6 +11,7 @@ import Profile from './pages/Profile';
 import Billing from './pages/Billing';
 import Workflows from './pages/Workflows';
 import WorkflowBuilder from './pages/WorkflowBuilder';
+import OAuthCallback from './pages/OAuthCallback';
 
 const PrivateRoute = ({ children }) => {
     const token = localStorage.getItem('token');
@@ -25,6 +26,7 @@ export default function App() {
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password/:token" element={<ResetPassword />} />
+                <Route path="/oauth/callback" element={<OAuthCallback />} />
                 <Route path="/" element={
                     <PrivateRoute>
                         <Dashboard />

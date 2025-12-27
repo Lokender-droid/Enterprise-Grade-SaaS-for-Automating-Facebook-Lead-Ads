@@ -141,6 +141,16 @@ export const createPortalSession = async () => {
     return data;
 };
 
+export const getInvoices = async () => {
+    const { data } = await api.get('/api/subscription/invoices');
+    return data;
+};
+
+export const changePlan = async (newPlan) => {
+    const { data } = await api.post('/api/subscription/change-plan', { newPlan });
+    return data;
+};
+
 // Organization Settings
 export const getSettings = async () => {
     const { data } = await api.get('/api/organization/settings');

@@ -12,5 +12,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), subscriptionC
 router.use(protect);
 router.post('/create-checkout-session', subscriptionController.createCheckoutSession);
 router.post('/create-portal-session', subscriptionController.createPortalSession);
+router.get('/invoices', subscriptionController.getInvoices);
+router.post('/change-plan', subscriptionController.changePlan);
 
 module.exports = router;

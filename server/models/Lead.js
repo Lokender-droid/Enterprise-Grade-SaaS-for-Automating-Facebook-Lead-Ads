@@ -35,10 +35,68 @@ const LeadSchema = new mongoose.Schema({
     companyInfo: { type: Object }, // { size, industry, tech_stack }
     predictedRevenue: { type: Number }, // Estimated Value
 
+    // Deal Pipeline
+    dealStage: {
+        type: String,
+        default: 'new'
+    }, // References DealStage.key
+    dealValue: {
+        type: Number,
+        default: 0
+    }, // Estimated deal value
+    probability: {
+        type: Number,
+        min: 0,
+        max: 100,
+        default: 0
+    }, // Win probability (%)
+    expectedCloseDate: {
+        type: Date
+    },
+
+    // Custom Fields (Dynamic)
+    customFields: {
+        type: Map,
+        of: mongoose.Schema.Types.Mixed
+    }, // Stores custom field values { fieldKey: value }
+
+    // CRM Sync Tracking
+    crmSync: {
+        salesforce: {
+            synced: { type: Boolean, default: false },
+            salesforceId: String,  // Salesforce Lead/Contact ID
+            lastSyncedAt: Date,
+            syncStatus: {
+                type: String,
+                enum: ['pending', 'synced', 'error'],
+                default: 'pending'
+            },
+            syncError: String
+        },
+        hubspot: {
+            synced: { type: Boolean, default: false },
+            hubspotId: String,  // HubSpot Contact ID
+            lastSyncedAt: Date,
+            syncStatus: {
+                type: String,
+                enum: ['pending', 'synced', 'error'],
+                default: 'pending'
+            },
+            syncError: String
+        }
+    },
 
     organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true }, // Segregate data by Org
     assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
     createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });
+
+// Indexes
+LeadSchema.index({ organizationId: 1, dealStage: 1 });
+LeadSchema.index({ organizationId: 1, assignedTo: 1 });
+LeadSchema.index({ organizationId: 1, createdAt: -1 });
+LeadSchema.index({ 'crmSync.salesforce.salesforceId': 1 });
+LeadSchema.index({ 'crmSync.hubspot.hubspotId': 1 });
+
 
 module.exports = mongoose.model('Lead', LeadSchema);

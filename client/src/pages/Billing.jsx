@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Check, CreditCard, Loader2, Lock } from 'lucide-react';
-import { createCheckoutSession, createPortalSession, getSettings } from '../services/api';
+import { ArrowLeft, Check, CreditCard, Loader2, Lock, Download, FileText } from 'lucide-react';
+import { createCheckoutSession, createPortalSession, getSettings, getInvoices } from '../services/api';
 
 const MockPaymentModal = ({ isOpen, onClose, onSuccess, planPrice }) => {
     const [processing, setProcessing] = useState(false);
@@ -110,11 +110,14 @@ export default function Billing() {
     const [org, setOrg] = useState(null);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
-    const [showPaymentModal, setShowPaymentModal] = useState(false); // State for modal
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [invoices, setInvoices] = useState([]);
+    const [invoicesLoading, setInvoicesLoading] = useState(false);
     const [searchParams] = useSearchParams();
 
     useEffect(() => {
         fetchOrgDetails();
+        fetchInvoices();
         if (searchParams.get('success')) {
             // alert('Subscription successful! Welcome to Pro.'); 
             // Better UX: Could show a toast instead of alert
@@ -129,6 +132,18 @@ export default function Billing() {
             console.error('Failed to fetch org details', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchInvoices = async () => {
+        setInvoicesLoading(true);
+        try {
+            const data = await getInvoices();
+            setInvoices(data.invoices || []);
+        } catch (error) {
+            console.error('Failed to fetch invoices', error);
+        } finally {
+            setInvoicesLoading(false);
         }
     };
 
@@ -296,6 +311,76 @@ export default function Billing() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Invoice History Section */}
+                        {isPro && (
+                            <div className="mt-16">
+                                <h3 className="text-2xl font-bold text-gray-900 mb-6">Invoice History</h3>
+
+                                {invoicesLoading ? (
+                                    <div className="flex justify-center py-12">
+                                        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+                                    </div>
+                                ) : invoices.length === 0 ? (
+                                    <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+                                        <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                                        <p className="text-gray-500">No invoices yet. Your first invoice will appear here.</p>
+                                    </div>
+                                ) : (
+                                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                        <table className="min-w-full divide-y divide-gray-200">
+                                            <thead className="bg-gray-50">
+                                                <tr>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="bg-white divide-y divide-gray-200">
+                                                {invoices.map((invoice) => (
+                                                    <tr key={invoice.id} className="hover:bg-gray-50 transition">
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                            {invoice.number || invoice.id}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {new Date(invoice.created * 1000).toLocaleDateString('en-US', {
+                                                                year: 'numeric',
+                                                                month: 'short',
+                                                                day: 'numeric'
+                                                            })}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            ${(invoice.amount_paid / 100).toFixed(2)}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
+                                                                    invoice.status === 'open' ? 'bg-yellow-100 text-yellow-800' :
+                                                                        'bg-gray-100 text-gray-800'
+                                                                }`}>
+                                                                {invoice.status}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                            <a
+                                                                href={invoice.invoice_pdf || invoice.hosted_invoice_url || '#'}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-indigo-600 hover:text-indigo-900 inline-flex items-center gap-1"
+                                                            >
+                                                                <Download className="w-4 h-4" />
+                                                                Download
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </main>
             </div>

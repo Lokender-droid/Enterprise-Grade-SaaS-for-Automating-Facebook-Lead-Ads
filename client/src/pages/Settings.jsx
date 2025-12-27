@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Loader2, Upload, Trash2, Building, Save, Shield, CheckCircle, Globe, Lock, Key, Server, Users, Zap, LayoutDashboard, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Loader2, Upload, Trash2, Building, Save, Shield, CheckCircle, Globe, Lock, Key, Server, Users, Zap, LayoutDashboard, Eye, EyeOff, XCircle, Mail, Phone, Brain, X, Check, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getSettings, updateSettings, verifyConnection, autoConfigureWebhooks } from '../services/api';
 import AuditLogsTable from '../components/AuditLogsTable';
@@ -45,14 +45,42 @@ const Settings = () => {
         const fetchSettings = async () => {
             try {
                 const data = await getSettings();
-                setFormData(data);
+                // Ensure all fields have default values (prevent undefined -> controlled input warning)
+                setFormData({
+                    name: data.name || '',
+                    pageId: data.pageId || '',
+                    whatsappPhoneId: data.whatsappPhoneId || '',
+                    metaAccessToken: data.metaAccessToken ? '****' : '',
+                    sendgridApiKey: data.sendgridApiKey ? '****' : '',
+                    fromEmail: data.fromEmail || '',
+                    vapiPrivateKey: data.vapiPrivateKey ? '****' : '',
+                    vapiPublicKey: data.vapiPublicKey ? '****' : '',
+                    vapiAssistantId: data.vapiAssistantId || '',
+                    vapiPhoneNumber: data.vapiPhoneNumber || '',
+                    openaiApiKey: data.openaiApiKey ? '****' : '',
+                    customDomain: data.customDomain || '',
+                    customRoles: data.customRoles || [],
+                    ssoSettings: data.ssoSettings || {
+                        provider: 'none',
+                        enabled: false,
+                        googleClientId: '',
+                        googleClientSecret: '',
+                        googleCallbackUrl: 'http://localhost:4000/auth/google/callback',
+                        googleEnabled: false,
+                        microsoftClientId: '',
+                        microsoftClientSecret: '',
+                        microsoftCallbackUrl: 'http://localhost:4000/auth/microsoft/callback',
+                        microsoftEnabled: false
+                    },
+                    integrations: data.integrations || { salesforce: { connected: false }, hubspot: { connected: false } }
+                });
                 if (data.logo) {
-                    const logoUrl = data.logo.startsWith('http') ? data.logo : `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}${data.logo}`;
-                    setLogo(logoUrl);
+                    const logoUrl = data.logo.startsWith('http') ? data.logo : `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}${data.logo} `;
+                    setPreviewUrl(logoUrl);
                 }
             } catch (err) {
-                console.error('Error fetching settings', err);
-                setError('Failed to load settings. Please refresh the page.');
+                console.error('Failed to fetch settings:', err);
+                setError('Failed to load settings');
             } finally {
                 setLoading(false);
             }
@@ -110,7 +138,7 @@ const Settings = () => {
             setMessage('Settings updated successfully!');
 
             if (response.org && response.org.logo) {
-                setLogo(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}${response.org.logo}`);
+                setLogo(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}${response.org.logo} `);
                 setPreviewUrl(null);
                 setSelectedFile(null);
             } else if (!logo) {
@@ -134,7 +162,7 @@ const Settings = () => {
             const data = new FormData();
             data.append('customDomain', formData.customDomain);
             await updateSettings(data);
-            setMessage(`Draft DNS record verified for ${formData.customDomain}. SSL Provisioning started.`);
+            setMessage(`Draft DNS record verified for ${formData.customDomain}.SSL Provisioning started.`);
             setLoading(false);
         }, 1500);
     };
@@ -167,10 +195,10 @@ const Settings = () => {
         try {
             await updateSettings(data);
             setFormData(prev => ({ ...prev, integrations: newIntegrations }));
-            if (!currentStatus) setMessage(`Connected to ${crm} successfully. Syncing leads...`);
+            if (!currentStatus) setMessage(`Connected to ${crm} successfully.Syncing leads...`);
         } catch (e) {
             console.error('Integration Error', e);
-            setError(`Error: ${e.response?.data?.message || 'Integration failed'}`);
+            setError(`Error: ${e.response?.data?.message || 'Integration failed'} `);
         } finally {
             setLoading(false);
         }
@@ -182,14 +210,15 @@ const Settings = () => {
         <button
             onClick={() => setActiveTab(id)}
             className={`
-                group flex items-center gap-2 px-6 py-4 text-sm font-medium transition-all duration-200 border-b-2
+                group flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all duration-200 border-b-2 whitespace-nowrap
                 ${activeTab === id
                     ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50'
-                    : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'}
+                    : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                }
             `}
         >
-            <Icon className={`w-4 h-4 ${activeTab === id ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
-            {label}
+            <Icon className={`w-4 h-4 flex-shrink-0 ${activeTab === id ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
+            <span className="hidden sm:inline">{label}</span>
         </button>
     );
 
@@ -221,12 +250,12 @@ const Settings = () => {
                     onChange={onChange}
                     disabled={disabled}
                     className={`
-                        block w-full text-sm border-gray-200 rounded-lg 
-                        focus:ring-indigo-500 focus:border-indigo-500 
-                        disabled:bg-gray-50 disabled:text-gray-500
-                        transition-all duration-200
-                        ${Icon ? 'pl-10' : 'pl-4'} py-2.5
-                    `}
+                        block w - full text - sm border - gray - 200 rounded - lg
+focus: ring - indigo - 500 focus: border - indigo - 500
+disabled: bg - gray - 50 disabled: text - gray - 500
+transition - all duration - 200
+                        ${Icon ? 'pl-10' : 'pl-4'} py - 2.5
+    `}
                     placeholder={placeholder}
                 />
             </div>
@@ -248,14 +277,14 @@ const Settings = () => {
 
                 {/* Header */}
                 <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 z-10 sticky top-0">
-                    <div className="py-4 px-8 flex items-center justify-between">
+                    <div className="py-3 px-4 sm:py-4 sm:px-6 md:px-8 flex items-center justify-between flex-wrap gap-3">
                         <div className="flex items-center gap-4">
                             <Link to="/" className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-900">
                                 <ArrowLeft className="w-5 h-5" />
                             </Link>
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Organization Settings</h1>
-                                <p className="text-sm text-gray-500">Manage your workspace, integrations, and billing</p>
+                                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Organization Settings</h1>
+                                <p className="text-xs sm:text-sm text-gray-500">Manage your workspace, integrations, and billing</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -267,15 +296,16 @@ const Settings = () => {
                     </div>
 
                     {/* Tabs */}
-                    <div className="px-8 flex overflow-x-auto hide-scrollbar border-b border-gray-200 bg-gray-50/50">
+                    <div className="px-4 sm:px-6 md:px-8 flex overflow-x-auto hide-scrollbar border-b border-gray-200 bg-gray-50/50">
                         <TabButton id="general" label="General" icon={LayoutDashboard} />
                         <TabButton id="enteprise" label="Enterprise Features" icon={Globe} />
+                        <TabButton id="sso" label="SSO Configuration" icon={Lock} />
                         <TabButton id="team" label="Team & Roles" icon={Users} />
                         <TabButton id="audit" label="Audit Logs" icon={Shield} />
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-auto p-8 relative">
+                <main className="flex-1 overflow-auto p-4 sm:p-6 md:p-8 relative">
                     {/* Background decoration */}
                     <div className="fixed top-0 left-0 w-full h-full pointer-events-none -z-10">
                         <div className="absolute top-20 right-20 w-64 h-64 bg-indigo-100 rounded-full blur-3xl opacity-30 animate-pulse"></div>
@@ -301,7 +331,7 @@ const Settings = () => {
                         {activeTab === 'general' && (
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 {/* Branding Card */}
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 transition-all hover:shadow-md">
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 md:p-8 transition-all hover:shadow-md">
                                     <SectionHeader title="Company Branding" description="Customize how your organization appears in emails and invoices." icon={Building} />
 
                                     <div className="flex flex-col md:flex-row gap-8 items-start">
@@ -345,21 +375,21 @@ const Settings = () => {
                                 <div className="bg-slate-900 rounded-xl shadow-xl overflow-hidden border border-slate-800 text-white relative">
                                     <div className="absolute top-0 right-0 p-32 bg-indigo-600 rounded-full blur-[120px] opacity-20 pointer-events-none"></div>
 
-                                    <div className="p-8 relative z-10">
-                                        <div className="flex items-center justify-between mb-8">
+                                    <div className="p-4 sm:p-6 md:p-8 relative z-10">
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
                                             <div>
-                                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                                <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
                                                     <span className="text-2xl">🤖</span> Neural AI Configuration
                                                 </h3>
-                                                <p className="text-slate-400 text-sm mt-1">Configure the autonomous agents that power your sales operations.</p>
+                                                <p className="text-slate-400 text-xs sm:text-sm mt-1">Configure the autonomous agents that power your sales operations.</p>
                                             </div>
-                                            <div className="px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full text-xs font-bold border border-indigo-500/30">
+                                            <div className="px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full text-xs font-bold border border-indigo-500/30 whitespace-nowrap">
                                                 POWERED BY OPENAI & VAPI
                                             </div>
                                         </div>
 
                                         {/* Vapi Section */}
-                                        <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-700/50 mb-6">
+                                        <div className="bg-slate-800/50 rounded-lg p-4 sm:p-6 border border-slate-700/50 mb-4 sm:mb-6">
                                             <h4 className="text-md font-bold text-indigo-400 mb-4 flex items-center gap-2">
                                                 <Users className="w-4 h-4" /> Voice Agent (Vapi.ai)
                                             </h4>
@@ -396,7 +426,7 @@ const Settings = () => {
                                         </div>
 
                                         {/* OpenAI Section */}
-                                        <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-700/50">
+                                        <div className="bg-slate-800/50 rounded-lg p-4 sm:p-6 border border-slate-700/50">
                                             <h4 className="text-md font-bold text-emerald-400 mb-4 flex items-center gap-2">
                                                 <Zap className="w-4 h-4" /> Intelligence Core (OpenAI)
                                             </h4>
@@ -498,7 +528,7 @@ const Settings = () => {
                                     </div>
 
                                     {/* CRM Integrations */}
-                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all">
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 hover:shadow-md transition-all">
                                         <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                                             <Server className="w-4 h-4 text-gray-400" /> CRM Sync
                                         </h3>
@@ -544,6 +574,231 @@ const Settings = () => {
                                             Invite Member
                                         </button>
                                     </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'sso' && (
+                            <div className="space-y-4 sm:space-y-6">
+                                {/* Google OAuth Configuration */}
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 md:p-8 transition-all hover:shadow-md">
+                                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+                                        <SectionHeader
+                                            title="Google OAuth Configuration"
+                                            description="Enable Google Sign-In for your users. Get credentials from Google Cloud Console."
+                                            icon={Globe}
+                                        />
+                                        <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.ssoSettings?.googleEnabled || false}
+                                                onChange={(e) => setFormData({
+                                                    ...formData,
+                                                    ssoSettings: {
+                                                        ...formData.ssoSettings,
+                                                        googleEnabled: e.target.checked
+                                                    }
+                                                })}
+                                                className="sr-only peer"
+                                            />
+                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                            <span className="ml-3 text-sm font-medium text-gray-700">
+                                                {formData.ssoSettings?.googleEnabled ? 'Enabled' : 'Disabled'}
+                                            </span>
+                                        </label>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-6">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                                                Google Client ID
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={formData.ssoSettings?.googleClientId || ''}
+                                                onChange={(e) => setFormData({
+                                                    ...formData,
+                                                    ssoSettings: {
+                                                        ...formData.ssoSettings,
+                                                        googleClientId: e.target.value
+                                                    }
+                                                })}
+                                                placeholder="123456789-abcdefg.apps.googleusercontent.com"
+                                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                                                Google Client Secret
+                                            </label>
+                                            <input
+                                                type="password"
+                                                value={formData.ssoSettings?.googleClientSecret || ''}
+                                                onChange={(e) => setFormData({
+                                                    ...formData,
+                                                    ssoSettings: {
+                                                        ...formData.ssoSettings,
+                                                        googleClientSecret: e.target.value
+                                                    }
+                                                })}
+                                                placeholder="GOCSPX-xxxxxxxxxxxxxxxxxxxxx"
+                                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                                                Callback URL
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={formData.ssoSettings?.googleCallbackUrl || 'http://localhost:4000/auth/google/callback'}
+                                                onChange={(e) => setFormData({
+                                                    ...formData,
+                                                    ssoSettings: {
+                                                        ...formData.ssoSettings,
+                                                        googleCallbackUrl: e.target.value
+                                                    }
+                                                })}
+                                                placeholder="http://localhost:4000/auth/google/callback"
+                                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                            />
+                                            <p className="mt-1 text-xs text-gray-500">Add this URL to your Google OAuth app's authorized redirect URIs</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Microsoft OAuth Configuration */}
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 md:p-8 transition-all hover:shadow-md">
+                                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+                                        <SectionHeader
+                                            title="Microsoft OAuth Configuration"
+                                            description="Enable Microsoft Sign-In for your users. Get credentials from Azure Portal."
+                                            icon={Globe}
+                                        />
+                                        <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.ssoSettings?.microsoftEnabled || false}
+                                                onChange={(e) => setFormData({
+                                                    ...formData,
+                                                    ssoSettings: {
+                                                        ...formData.ssoSettings,
+                                                        microsoftEnabled: e.target.checked
+                                                    }
+                                                })}
+                                                className="sr-only peer"
+                                            />
+                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                            <span className="ml-3 text-sm font-medium text-gray-700">
+                                                {formData.ssoSettings?.microsoftEnabled ? 'Enabled' : 'Disabled'}
+                                            </span>
+                                        </label>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-6">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                                                Microsoft Client ID
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={formData.ssoSettings?.microsoftClientId || ''}
+                                                onChange={(e) => setFormData({
+                                                    ...formData,
+                                                    ssoSettings: {
+                                                        ...formData.ssoSettings,
+                                                        microsoftClientId: e.target.value
+                                                    }
+                                                })}
+                                                placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                                                Microsoft Client Secret
+                                            </label>
+                                            <input
+                                                type="password"
+                                                value={formData.ssoSettings?.microsoftClientSecret || ''}
+                                                onChange={(e) => setFormData({
+                                                    ...formData,
+                                                    ssoSettings: {
+                                                        ...formData.ssoSettings,
+                                                        microsoftClientSecret: e.target.value
+                                                    }
+                                                })}
+                                                placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                                                Callback URL
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={formData.ssoSettings?.microsoftCallbackUrl || 'http://localhost:4000/auth/microsoft/callback'}
+                                                onChange={(e) => setFormData({
+                                                    ...formData,
+                                                    ssoSettings: {
+                                                        ...formData.ssoSettings,
+                                                        microsoftCallbackUrl: e.target.value
+                                                    }
+                                                })}
+                                                placeholder="http://localhost:4000/auth/microsoft/callback"
+                                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                            />
+                                            <p className="mt-1 text-xs text-gray-500">Add this URL to your Microsoft app's redirect URIs</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Info Box */}
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                    <div className="flex">
+                                        <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+                                        <div className="ml-3">
+                                            <h3 className="text-sm font-medium text-blue-800">How to get OAuth credentials</h3>
+                                            <div className="mt-2 text-sm text-blue-700">
+                                                <p className="mb-2"><strong>Google:</strong> Visit <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="underline">Google Cloud Console</a> → Create OAuth 2.0 Client ID</p>
+                                                <p><strong>Microsoft:</strong> Visit <a href="https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps" target="_blank" rel="noopener noreferrer" className="underline">Azure Portal</a> → App Registrations → New Registration</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Save Button */}
+                                <div className="flex flex-col sm:flex-row justify-end gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => window.location.reload()}
+                                        className="w-full sm:w-auto px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-medium"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleSubmit}
+                                        disabled={loading}
+                                        className="w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+                                    >
+                                        {loading ? (
+                                            <>
+                                                <Loader2 className="w-5 h-5 animate-spin" />
+                                                <span className="hidden sm:inline">Saving...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Save className="w-5 h-5" />
+                                                Save OAuth Configuration
+                                            </>
+                                        )}
+                                    </button>
                                 </div>
                             </div>
                         )}

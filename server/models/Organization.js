@@ -23,10 +23,22 @@ const OrganizationSchema = new mongoose.Schema({
         permissions: [{ type: String }] // e.g. ["view_leads", "make_calls"] (No "delete_leads")
     }],
 
-    // Enterprise: Usage & Limits
+    // Enterprise: SSO Configuration (UI Managed)
     ssoSettings: {
         provider: { type: String, enum: ['google', 'microsoft', 'none'], default: 'none' },
-        enabled: { type: Boolean, default: false }
+        enabled: { type: Boolean, default: false },
+
+        // Google OAuth Credentials
+        googleClientId: { type: String },
+        googleClientSecret: { type: String },
+        googleCallbackUrl: { type: String, default: 'http://localhost:4000/auth/google/callback' },
+        googleEnabled: { type: Boolean, default: false },
+
+        // Microsoft OAuth Credentials
+        microsoftClientId: { type: String },
+        microsoftClientSecret: { type: String },
+        microsoftCallbackUrl: { type: String, default: 'http://localhost:4000/auth/microsoft/callback' },
+        microsoftEnabled: { type: Boolean, default: false }
     },
     integrations: {
         salesforce: { connected: { type: Boolean, default: false }, lastSync: Date },

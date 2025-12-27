@@ -19,6 +19,10 @@ const organizationRoutes = require('./routes/organizationRoutes');
 const teamRoutes = require('./routes/teamRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
+const ssoRoutes = require('./routes/ssoRoutes');
+
+// Initialize Passport
+const passport = require('./config/passport-setup');
 
 // Initialize App
 const app = express();
@@ -36,6 +40,9 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
+
+// Initialize Passport
+app.use(passport.initialize());
 
 // Security Middleware
 app.use(helmet()); // Secure HTTP headers
@@ -81,7 +88,7 @@ app.use((req, res, next) => {
 app.use('/api/webhook', webhookRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/auth', authRoutes);
-app.use('/api/organization', organizationRoutes);
+app.use('/api/organization', organizationRoutes); // Fixed: was /organization, now /api/organization
 app.use('/api/team', teamRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/subscription', subscriptionRoutes);
@@ -89,6 +96,7 @@ app.use('/api/ai', require('./routes/aiRoutes')); // AI Chatbot Route
 app.use('/api/enterprise', require('./routes/enterpriseRoutes')); // New Audit/Notification Route
 app.use('/api/workflows', require('./routes/workflowRoutes')); // RPA Workflow Route
 app.use('/users', require('./routes/users'));
+app.use('/auth', ssoRoutes); // SSO OAuth Routes
 
 // Serve Assets (Brochure)
 app.use('/assets', express.static(path.join(__dirname, '../assets')));

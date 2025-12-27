@@ -132,3 +132,104 @@ async function handleSubscriptionUpdated(subscription) {
         }
     );
 }
+
+// Get Invoice History
+exports.getInvoices = async (req, res) => {
+    try {
+        const org = await Organization.findById(req.user.organizationId);
+
+        if (!org || !org.stripeCustomerId) {
+            return res.json({ invoices: [] });
+        }
+
+        if (!stripe) {
+            // Mock invoices for demo
+            const mockInvoices = [
+                {
+                    id: 'in_mock_1',
+                    number: 'INV-2024-001',
+                    amount_paid: 4900,
+                    currency: 'usd',
+                    status: 'paid',
+                    created: Math.floor(Date.now() / 1000) - 86400 * 30,
+                    invoice_pdf: '#',
+                    hosted_invoice_url: '#'
+                },
+                {
+                    id: 'in_mock_2',
+                    number: 'INV-2024-002',
+                    amount_paid: 4900,
+                    currency: 'usd',
+                    status: 'paid',
+                    created: Math.floor(Date.now() / 1000) - 86400 * 60,
+                    invoice_pdf: '#',
+                    hosted_invoice_url: '#'
+                }
+            ];
+            return res.json({ invoices: mockInvoices });
+        }
+
+        const invoices = await stripe.invoices.list({
+            customer: org.stripeCustomerId,
+            limit: 12
+        });
+
+        res.json({ invoices: invoices.data });
+    } catch (error) {
+        console.error('Get invoices error:', error);
+        res.status(500).json({ message: 'Failed to fetch invoices' });
+    }
+};
+
+// Change Plan (Upgrade/Downgrade)
+exports.changePlan = async (req, res) => {
+    try {
+        const { newPlan } = req.body; // 'free', 'pro', 'enterprise'
+        const org = await Organization.findById(req.user.organizationId);
+
+        if (!stripe) {
+            // Mock mode - just update the plan
+            org.plan = newPlan;
+            await org.save();
+            return res.json({ success: true, message: `Plan changed to ${newPlan}` });
+        }
+
+        if (!org.stripeSubscriptionId) {
+            return res.status(400).json({ message: 'No active subscription found' });
+        }
+
+        // Get the subscription
+        const subscription = await stripe.subscriptions.retrieve(org.stripeSubscriptionId);
+
+        // Define price IDs for each plan
+        const priceIds = {
+            free: null, // Cancel subscription
+            pro: process.env.STRIPE_PRICE_ID_PRO || 'price_mock_pro',
+            enterprise: process.env.STRIPE_PRICE_ID_ENTERPRISE || 'price_mock_enterprise'
+        };
+
+        if (newPlan === 'free') {
+            // Cancel subscription
+            await stripe.subscriptions.cancel(org.stripeSubscriptionId);
+            org.plan = 'free';
+            org.subscriptionStatus = 'canceled';
+        } else {
+            // Update subscription with new price
+            await stripe.subscriptions.update(org.stripeSubscriptionId, {
+                items: [{
+                    id: subscription.items.data[0].id,
+                    price: priceIds[newPlan]
+                }],
+                proration_behavior: 'create_prorations'
+            });
+            org.plan = newPlan;
+        }
+
+        await org.save();
+        res.json({ success: true, message: `Plan changed to ${newPlan}` });
+
+    } catch (error) {
+        console.error('Change plan error:', error);
+        res.status(500).json({ message: 'Failed to change plan' });
+    }
+};
