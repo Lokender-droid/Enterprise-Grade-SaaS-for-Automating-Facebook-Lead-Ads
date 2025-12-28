@@ -1,0 +1,178 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { login } from '../services/api';
+import { motion } from 'framer-motion';
+import { Lock, Mail, ArrowRight, Chrome, Eye, EyeOff } from 'lucide-react';
+
+export default function Login() {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        try {
+            const data = await login(email, password);
+            localStorage.setItem('token', data.token);
+            navigate('/');
+        } catch (err) {
+            setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleLogin = () => {
+        // Redirect to backend Google OAuth endpoint
+        window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/auth/google`;
+    };
+
+    const handleMicrosoftLogin = () => {
+        // Redirect to backend Microsoft OAuth endpoint
+        window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/auth/microsoft`;
+    };
+
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-blue-800 to-blue-900 relative overflow-hidden">
+            {/* Background Decorations */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
+                <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+                <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+                <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+            </div>
+
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="bg-white/10 backdrop-blur-lg border border-white/20 p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-md z-10 mx-4"
+            >
+                <div className="text-center mb-8">
+                    <div className="mx-auto w-16 h-16 bg-gradient-to-tr from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg transform rotate-3 hover:rotate-6 transition-all">
+                        <Lock className="w-8 h-8 text-white" />
+                    </div>
+                    <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">Welcome Back</h2>
+                    <p className="text-blue-200 text-sm">Sign in to manage your automation</p>
+                </div>
+
+                {error && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="bg-red-500/20 border border-red-500/50 text-red-100 p-3 rounded-lg mb-6 text-sm flex items-center gap-2"
+                    >
+                        <span className="w-1.5 h-1.5 bg-red-400 rounded-full"></span>
+                        {error}
+                    </motion.div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="relative group">
+                        <Mail className="absolute left-3 top-3.5 h-5 w-5 text-blue-300 group-focus-within:text-white transition-colors" />
+                        <input
+                            type="email"
+                            placeholder="Email Address"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="w-full bg-slate-900/50 border border-slate-700 text-white placeholder-slate-400 pl-10 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            required
+                        />
+                    </div>
+
+                    <div className="relative group">
+                        <Lock className="absolute left-3 top-3.5 h-5 w-5 text-blue-300 group-focus-within:text-white transition-colors" />
+                        <input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full bg-slate-900/50 border border-slate-700 text-white placeholder-slate-400 pl-10 pr-12 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            required
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-3.5 text-slate-400 hover:text-white transition-colors"
+                        >
+                            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                        </button>
+                    </div>
+
+                    <div className="flex items-center justify-between text-sm">
+                        <label className="flex items-center text-blue-200 cursor-pointer hover:text-white transition-colors">
+                            <input type="checkbox" className="mr-2 rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-offset-0 focus:ring-blue-500" />
+                            Remember me
+                        </label>
+                        <a href="/forgot-password" className="text-blue-400 hover:text-blue-300 transition-colors font-medium">
+                            Forgot Password?
+                        </a>
+                    </div>
+
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
+                        {loading ? 'Signing in...' : 'Sign In'}
+                        {!loading && <ArrowRight className="w-5 h-5" />}
+                    </motion.button>
+                </form>
+
+                <div className="mt-8">
+                    <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-white/10"></div>
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                            <span className="px-2 bg-transparent text-slate-400">Or continue with</span>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 grid grid-cols-2 gap-3">
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={handleGoogleLogin}
+                            className="w-full bg-white text-gray-900 py-3 rounded-xl font-medium shadow-sm hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+                        >
+                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
+                            Google
+                        </motion.button>
+
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={handleMicrosoftLogin}
+                            className="w-full bg-white text-gray-900 py-3 rounded-xl font-medium shadow-sm hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+                        >
+                            <svg className="w-5 h-5" viewBox="0 0 23 23" fill="none">
+                                <path d="M0 0h11v11H0V0z" fill="#f25022" />
+                                <path d="M12 0h11v11H12V0z" fill="#00a4ef" />
+                                <path d="M0 12h11v11H0V12z" fill="#7fba00" />
+                                <path d="M12 12h11v11H12V12z" fill="#ffb900" />
+                            </svg>
+                            Microsoft
+                        </motion.button>
+                    </div>
+
+                    <div className="mt-8 text-center text-sm">
+                        <p className="text-slate-400">
+                            Don't have an account?{' '}
+                            <a href="/signup" className="text-blue-400 hover:text-blue-300 transition-colors font-medium">
+                                Create an account
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </motion.div>
+        </div>
+    );
+}
