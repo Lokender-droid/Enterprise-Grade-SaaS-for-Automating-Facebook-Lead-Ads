@@ -1,7 +1,10 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+<<<<<<< HEAD
 const encryptionService = require('../services/encryptionService');
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 
 const AdminSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
@@ -16,6 +19,7 @@ const AdminSchema = new mongoose.Schema({
     oauthProvider: { type: String, enum: ['email', 'google', 'microsoft'], default: 'email' },
     profilePicture: { type: String },
     emailVerified: { type: Boolean, default: false },
+<<<<<<< HEAD
 
     // Two-Factor Authentication
     twoFactorEnabled: { type: Boolean, default: false },
@@ -27,6 +31,8 @@ const AdminSchema = new mongoose.Schema({
 
     // Security & Login Tracking
     lastLoginAt: { type: Date },
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     loginAttempts: { type: Number, required: true, default: 0 },
     lockUntil: { type: Number },
     resetPasswordToken: String,
@@ -41,6 +47,7 @@ AdminSchema.pre('save', async function (next) {
     next();
 });
 
+<<<<<<< HEAD
 // Encrypt TOTP secret before saving
 AdminSchema.pre('save', async function (next) {
     if (this.isModified('totpSecret') && this.totpSecret && !encryptionService.isEncrypted(this.totpSecret)) {
@@ -64,6 +71,8 @@ AdminSchema.post('findOne', function (doc) {
     }
 });
 
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 // Method to match password
 AdminSchema.methods.matchPassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);

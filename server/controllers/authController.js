@@ -1,12 +1,18 @@
 const Admin = require('../models/Admin');
 const Organization = require('../models/Organization'); // Import Organization
+<<<<<<< HEAD
 const ActivityLog = require('../models/ActivityLog');
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 const logger = require('../utils/logger');
 const crypto = require('crypto');
 const { sendResetEmail } = require('../services/emailService');
+<<<<<<< HEAD
 const otpService = require('../services/otpService');
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 
 const generateToken = (id) => {
     return jwt.sign({ id }, config.jwtSecret, { expiresIn: '30d' });
@@ -56,9 +62,12 @@ exports.register = async (req, res) => {
 
     } catch (error) {
         logger.error('Registration Error', error);
+<<<<<<< HEAD
         if (error.name === 'ValidationError') {
             return res.status(400).json({ message: error.message });
         }
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
         res.status(500).json({ message: 'Server error: ' + error.message });
     }
 };
@@ -139,6 +148,7 @@ exports.login = async (req, res) => {
             // Success: Reset attempts
             admin.loginAttempts = 0;
             admin.lockUntil = undefined;
+<<<<<<< HEAD
 
             // Check if 2FA is enabled
             if (admin.twoFactorEnabled) {
@@ -176,6 +186,14 @@ exports.login = async (req, res) => {
                 ipAddress: req.ip || req.connection.remoteAddress,
                 userAgent: req.get('user-agent')
             }).catch(err => console.error('[AUDIT-LOG] Failed:', err));
+=======
+            await admin.save();
+
+            // Log Activity
+            const { logActivity } = require('../services/activityLogger');
+            // Mock req if needed or just pass object. Using a simple object here if req is messy
+            await logActivity(req, 'USER_LOGIN', { email: admin.email }, 'Admin', admin._id);
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 
             res.json({
                 _id: admin._id,

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState, useEffect, useRef } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useToast } from '../components/Toast';
@@ -28,12 +29,20 @@ import {
     Info 
 } from 'lucide-react';
 import { getSettings, updateSettings } from '../services/api';
+=======
+import CustomFieldsSettings from '../components/CustomFieldsSettings';
+import DealPipelineSettings from '../components/DealPipelineSettings';
+import { GanttChartSquare } from 'lucide-react';
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 
 
 
 const Settings = () => {
+<<<<<<< HEAD
     const toast = useToast();
     
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     // --- STATE MANAGEMENT ---
     const [formData, setFormData] = useState({
         name: '',
@@ -53,6 +62,7 @@ const Settings = () => {
         customDomain: '',
         customRoles: [],
         ssoSettings: { provider: 'none', enabled: false },
+<<<<<<< HEAD
         integrations: { salesforce: { connected: false }, hubspot: { connected: false } },
         features: { email: false, whatsapp: false, aiStats: false, voiceAgent: false }
     });
@@ -62,6 +72,14 @@ const Settings = () => {
     const [logo, setLogo] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+=======
+        integrations: { salesforce: { connected: false }, hubspot: { connected: false } }
+    });
+    const [logo, setLogo] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [message, setMessage] = useState('');
+    const [error, setError] = useState('');
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 
     const fileInputRef = useRef(null);
     const [selectedFile, setSelectedFile] = useState(null);
@@ -72,6 +90,7 @@ const Settings = () => {
     const [showVapiKeys, setShowVapiKeys] = useState(false);
     const [showOpenAIKey, setShowOpenAIKey] = useState(false);
 
+<<<<<<< HEAD
     // Integration Modals
     const [integrationModal, setIntegrationModal] = useState(null); // 'salesforce' | 'hubspot' | null
     const [integrationCreds, setIntegrationCreds] = useState({});
@@ -116,6 +135,8 @@ const Settings = () => {
         setIsDirty(hasChanges);
     }, [formData, initialData]);
 
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     // --- EFFECTS ---
     useEffect(() => {
         const fetchSettings = async () => {
@@ -136,7 +157,10 @@ const Settings = () => {
                     openaiApiKey: data.openaiApiKey ? '****' : '',
                     customDomain: data.customDomain || '',
                     customRoles: data.customRoles || [],
+<<<<<<< HEAD
                     features: data.features || { email: false, whatsapp: false, aiStats: false, voiceAgent: false },
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
                     ssoSettings: data.ssoSettings || {
                         provider: 'none',
                         enabled: false,
@@ -151,14 +175,23 @@ const Settings = () => {
                     },
                     integrations: data.integrations || { salesforce: { connected: false }, hubspot: { connected: false } }
                 });
+<<<<<<< HEAD
                 setInitialData(data); // Save for dirty state tracking
                 if (data.logo) {
                     const logoUrl = data.logo.startsWith('http') ? data.logo : `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}${data.logo}`;
+=======
+                if (data.logo) {
+                    const logoUrl = data.logo.startsWith('http') ? data.logo : `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}${data.logo} `;
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
                     setPreviewUrl(logoUrl);
                 }
             } catch (err) {
                 console.error('Failed to fetch settings:', err);
+<<<<<<< HEAD
                 toast.error('Failed to load settings. Please refresh the page.');
+=======
+                setError('Failed to load settings');
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
             } finally {
                 setLoading(false);
             }
@@ -167,6 +200,7 @@ const Settings = () => {
     }, []);
 
     // --- HANDLERS ---
+<<<<<<< HEAD
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
@@ -174,6 +208,9 @@ const Settings = () => {
         const errors = validateField(name, value);
         setValidationErrors(prev => ({ ...prev, ...errors, [name]: errors[name] ? errors[name] : undefined }));
     };
+=======
+    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -192,6 +229,7 @@ const Settings = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+<<<<<<< HEAD
         
         // Validate before submit
         if (!validateForm()) {
@@ -200,12 +238,20 @@ const Settings = () => {
         }
         
         setSaving(true);
+=======
+        setMessage('');
+        setError('');
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
         try {
             const data = new FormData();
             // Basic Fields
             ['name', 'pageId', 'whatsappPhoneId', 'fromEmail'].forEach(key => data.append(key, formData[key]));
 
             // Conditional Fields (Secrets)
+<<<<<<< HEAD
+=======
+            // Conditional Fields (Secrets)
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
             if (formData.metaAccessToken !== undefined && !formData.metaAccessToken.includes('****')) data.append('metaAccessToken', formData.metaAccessToken);
             if (formData.sendgridApiKey !== undefined && !formData.sendgridApiKey.includes('****')) data.append('sendgridApiKey', formData.sendgridApiKey);
 
@@ -216,9 +262,12 @@ const Settings = () => {
             if (formData.vapiPhoneNumber !== undefined) data.append('vapiPhoneNumber', formData.vapiPhoneNumber);
             if (formData.openaiApiKey !== undefined && !formData.openaiApiKey.includes('****')) data.append('openaiApiKey', formData.openaiApiKey);
 
+<<<<<<< HEAD
             // Features
             data.append('features', JSON.stringify(formData.features));
 
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
             // File Handling
             if (selectedFile) {
                 data.append('logo', selectedFile);
@@ -227,11 +276,18 @@ const Settings = () => {
             }
 
             const response = await updateSettings(data);
+<<<<<<< HEAD
             toast.success('Settings updated successfully!');
             setInitialData(formData); // Update to reflect saved state
 
             if (response.org && response.org.logo) {
                 setLogo(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}${response.org.logo}`);
+=======
+            setMessage('Settings updated successfully!');
+
+            if (response.org && response.org.logo) {
+                setLogo(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}${response.org.logo} `);
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
                 setPreviewUrl(null);
                 setSelectedFile(null);
             } else if (!logo) {
@@ -239,12 +295,17 @@ const Settings = () => {
             }
         } catch (err) {
             console.error('Error updating settings', err);
+<<<<<<< HEAD
             toast.error(err.response?.data?.message || 'Failed to update settings. Please try again.');
+=======
+            setError('Failed to update settings');
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
         }
     };
 
     const handleVerifyDomain = async (e) => {
         e.preventDefault();
+<<<<<<< HEAD
         
         if (!formData.customDomain) {
             toast.error("Please enter a domain first");
@@ -287,10 +348,29 @@ const Settings = () => {
         }
 
         // 1. Save the provider selection state first
+=======
+        if (!formData.customDomain) {
+            setError("Please enter a domain");
+            return;
+        }
+        setLoading(true);
+        setTimeout(async () => {
+            // Mock verification success
+            const data = new FormData();
+            data.append('customDomain', formData.customDomain);
+            await updateSettings(data);
+            setMessage(`Draft DNS record verified for ${formData.customDomain}.SSL Provisioning started.`);
+            setLoading(false);
+        }, 1500);
+    };
+
+    const handleConnectSSO = async (provider) => {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
         setLoading(true);
         const newSettings = { ...formData.ssoSettings, provider: provider, enabled: true };
         const data = new FormData();
         data.append('ssoSettings', JSON.stringify(newSettings));
+<<<<<<< HEAD
         
         try {
             await updateSettings(data);
@@ -363,6 +443,38 @@ const Settings = () => {
         };
 
         await submitIntegrations(newIntegrations, crm, true);
+=======
+        try {
+            await updateSettings(data);
+            setFormData(prev => ({ ...prev, ssoSettings: newSettings }));
+            setMessage(`Redirecting to ${provider} OAuth... (Simulation: Connected)`);
+        } catch (e) {
+            setError('Connection failed');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleConnectCRM = async (crm) => {
+        setLoading(true);
+        const currentStatus = formData.integrations?.[crm]?.connected || false;
+        const newIntegrations = {
+            ...formData.integrations,
+            [crm]: { ...formData.integrations?.[crm], connected: !currentStatus }
+        };
+        const data = new FormData();
+        data.append('integrations', JSON.stringify(newIntegrations));
+        try {
+            await updateSettings(data);
+            setFormData(prev => ({ ...prev, integrations: newIntegrations }));
+            if (!currentStatus) setMessage(`Connected to ${crm} successfully.Syncing leads...`);
+        } catch (e) {
+            console.error('Integration Error', e);
+            setError(`Error: ${e.response?.data?.message || 'Integration failed'} `);
+        } finally {
+            setLoading(false);
+        }
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     };
 
     // --- UI COMPONENTS ---
@@ -395,6 +507,7 @@ const Settings = () => {
         </div>
     );
 
+<<<<<<< HEAD
     const InputField = ({ label, name, type = "text", placeholder, value, onChange, disabled, icon: Icon }) => {
         const error = validationErrors[name];
         return (
@@ -435,6 +548,35 @@ const Settings = () => {
             </div>
         );
     };
+=======
+    const InputField = ({ label, name, type = "text", placeholder, value, onChange, disabled, icon: Icon }) => (
+        <div>
+            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">{label}</label>
+            <div className="relative rounded-md shadow-sm">
+                {Icon && (
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Icon className="h-4 w-4 text-gray-400" />
+                    </div>
+                )}
+                <input
+                    type={type}
+                    name={name}
+                    value={value || ''}
+                    onChange={onChange}
+                    disabled={disabled}
+                    className={`
+                        block w - full text - sm border - gray - 200 rounded - lg
+focus: ring - indigo - 500 focus: border - indigo - 500
+disabled: bg - gray - 50 disabled: text - gray - 500
+transition - all duration - 200
+                        ${Icon ? 'pl-10' : 'pl-4'} py - 2.5
+    `}
+                    placeholder={placeholder}
+                />
+            </div>
+        </div>
+    );
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 
     if (loading && !formData.name) return (
         <div className="flex h-screen items-center justify-center bg-gray-50">
@@ -453,9 +595,15 @@ const Settings = () => {
                 <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 z-10 sticky top-0">
                     <div className="py-3 px-4 sm:py-4 sm:px-6 md:px-8 flex items-center justify-between flex-wrap gap-3">
                         <div className="flex items-center gap-4">
+<<<<<<< HEAD
                             <RouterLink to="/" className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-900">
                                 <ArrowLeft className="w-5 h-5" />
                             </RouterLink>
+=======
+                            <Link to="/" className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-900">
+                                <ArrowLeft className="w-5 h-5" />
+                            </Link>
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
                             <div>
                                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Organization Settings</h1>
                                 <p className="text-xs sm:text-sm text-gray-500">Manage your workspace, integrations, and billing</p>
@@ -488,11 +636,23 @@ const Settings = () => {
 
                     <div className="max-w-4xl mx-auto space-y-6 pb-20">
 
+<<<<<<< HEAD
                         {/* Unsaved Changes Indicator */}
                         {isDirty && (
                             <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 flex items-center gap-3 shadow-sm animate-fade-in">
                                 <AlertCircle className="w-5 h-5 text-amber-600" />
                                 <span className="font-medium">You have unsaved changes</span>
+=======
+                        {/* Messages */}
+                        {message && (
+                            <div className="p-4 rounded-lg bg-green-50 border border-green-200 text-green-800 flex items-center gap-3 shadow-sm animate-fade-in">
+                                <CheckCircle className="w-5 h-5 text-green-600" /> {message}
+                            </div>
+                        )}
+                        {error && (
+                            <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 shadow-sm animate-fade-in">
+                                {error}
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
                             </div>
                         )}
 
@@ -651,6 +811,7 @@ const Settings = () => {
                         {activeTab === 'enteprise' && (
                             <div className="space-y-6 animate-fade-in-up">
                                 {/* Branding Section */}
+<<<<<<< HEAD
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
                                 <SectionHeader title="White-Label Branding" description="Remove MetaLead branding and host on your own domain." icon={Globe} />
 
@@ -761,6 +922,31 @@ const Settings = () => {
                                     )}
                                 </div>
                             </div>
+=======
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+                                    <SectionHeader title="White-Label Branding" description="Remove MetaLead branding and host on your own domain." icon={Globe} />
+
+                                    <div className="flex gap-4 items-end bg-gray-50 border border-gray-200 p-6 rounded-lg">
+                                        <div className="flex-1">
+                                            <label className="block text-sm font-bold text-gray-700 mb-2">Custom Domain (CNAME)</label>
+                                            <div className="flex rounded-md shadow-sm">
+                                                <span className="inline-flex items-center px-4 rounded-l-md border border-r-0 border-gray-300 bg-gray-100 text-gray-500 sm:text-sm font-mono">
+                                                    https://
+                                                </span>
+                                                <input type="text" name="customDomain" value={formData.customDomain} onChange={handleChange} className="flex-1 block w-full rounded-none rounded-r-md sm:text-sm border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 py-2.5" placeholder="portal.yourcompany.com" />
+                                            </div>
+                                            <p className="mt-2 text-xs text-gray-500">Add a CNAME record pointing to <strong>app.metalead.com</strong></p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={handleVerifyDomain} disabled={loading}
+                                            className="mb-[1.3rem] bg-indigo-600 text-white px-5 py-2.5 rounded-md text-sm font-medium hover:bg-indigo-700 shadow-sm transition-all"
+                                        >
+                                            {loading ? 'Checking...' : 'Verify Domain'}
+                                        </button>
+                                    </div>
+                                </div>
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 
                                 {/* SSO Grid */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1089,6 +1275,7 @@ const Settings = () => {
 
                     </div>
                 </main>
+<<<<<<< HEAD
                 {/* Integration Credentials Modal - Premium Enterprise UI */}
                 {integrationModal && (
                     <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
@@ -1236,6 +1423,8 @@ const Settings = () => {
                     </div>
                 )}
 
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
             </div>
         </div>
     );

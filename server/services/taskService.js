@@ -2,13 +2,20 @@ const Task = require('../models/Task');
 const Lead = require('../models/Lead');
 const Activity = require('../models/Activity');
 
+<<<<<<< HEAD
 const notificationService = require('./notificationService');
 
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 class TaskService {
     /**
      * Create a new task
      */
+<<<<<<< HEAD
     async createTask(taskData, createdBy, io = null) {
+=======
+    async createTask(taskData, createdBy) {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
         try {
             const task = await Task.create({
                 organizationId: taskData.organizationId,
@@ -26,6 +33,7 @@ class TaskService {
             });
 
             // Log activity
+<<<<<<< HEAD
             // Log activity (Only if leadId exists, otherwise it's a general task)
             if (taskData.leadId) {
                 await Activity.create({
@@ -57,6 +65,23 @@ class TaskService {
                     relatedModel: 'Task'
                 }, io);
             }
+=======
+            await Activity.create({
+                organizationId: taskData.organizationId,
+                leadId: taskData.leadId,
+                type: 'task_created',
+                title: 'Task created',
+                description: `Created task: ${taskData.title}`,
+                performedBy: createdBy,
+                performedByType: 'user',
+                relatedTaskId: task._id,
+                metadata: {
+                    taskType: task.type,
+                    priority: task.priority,
+                    dueDate: task.dueDate
+                }
+            });
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 
             return await task.populate('assignedTo createdBy', 'name email');
         } catch (error) {

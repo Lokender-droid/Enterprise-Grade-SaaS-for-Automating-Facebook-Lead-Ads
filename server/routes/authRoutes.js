@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
+<<<<<<< HEAD
 const twoFactorController = require('../controllers/2faController');
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 
 router.post('/register', authController.register);
 router.post('/register-invite', authController.registerFromInvite);
@@ -9,6 +12,7 @@ router.post('/login', authController.login);
 router.put('/resetpassword/:resetToken', authController.resetPassword);
 router.put('/profile', authController.protect, authController.updateProfile);
 
+<<<<<<< HEAD
 // Two-Factor Authentication Routes
 router.post('/2fa/setup', authController.protect, twoFactorController.setup2FA);
 router.post('/2fa/verify-setup', authController.protect, twoFactorController.verify2FASetup);
@@ -20,3 +24,6 @@ router.get('/2fa/status', authController.protect, twoFactorController.get2FAStat
 
 module.exports = router;
 
+=======
+module.exports = router;
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19

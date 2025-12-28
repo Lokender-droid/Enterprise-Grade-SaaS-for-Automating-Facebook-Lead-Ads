@@ -9,7 +9,10 @@ const intelligenceService = require('./intelligenceService');
 const profilingService = require('./profilingService');
 const revenueService = require('./revenueService');
 const automationService = require('./automationService');
+<<<<<<< HEAD
 const integrationService = require('./integrationService');
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 
 const Organization = require('../models/Organization');
 const config = require('../config');
@@ -43,13 +46,18 @@ const processNewLead = async (leadId, pageId, io) => {
                 publicKey: organization.vapiPublicKey,
                 assistantId: organization.vapiAssistantId
             },
+<<<<<<< HEAD
             openaiApiKey: organization.openaiApiKey,
             features: organization.features || {}
+=======
+            openaiApiKey: organization.openaiApiKey
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
         };
 
         // 1. Fetch from Facebook using Org Token
         const leadData = await facebookService.fetchLead(leadId, orgConfig.metaAccessToken);
 
+<<<<<<< HEAD
         // 1.5 Calculate Lead Score (AI)
         let scoreResult = { score: 0, reason: 'AI Scoring Disabled' };
         if (orgConfig.features.aiStats) {
@@ -59,6 +67,10 @@ const processNewLead = async (leadId, pageId, io) => {
                 logger.error('AI Score Failed', e);
             }
         }
+=======
+        // 1.5 Calculate Lead Score (AI) - Passing Org Config for Keys
+        const scoreResult = await aiScoringService.calculateLeadScore(leadData, orgConfig);
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 
         // 2. Save Initial Lead with Org ID
         let lead = new Lead({
@@ -70,18 +82,27 @@ const processNewLead = async (leadId, pageId, io) => {
         await lead.save();
 
         // --- ADVANCED AI AGENTS ---
+<<<<<<< HEAD
         if (orgConfig.features.aiStats || orgConfig.features.voiceAgent) {
             await triggerAdvancedFeatures(lead, orgConfig);
         }
 
 
+=======
+        await triggerAdvancedFeatures(lead, orgConfig);
+        // --------------------------
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 
         // Notify Admin UI 
         if (io) io.emit('new_lead', lead);
 
         // 3. Send Email
         try {
+<<<<<<< HEAD
             if (lead.email && orgConfig.features.email) {
+=======
+            if (lead.email) {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
                 await emailService.sendWelcomeEmail(lead, orgConfig);
                 lead.status.email = 'sent';
                 await logger.dbLog(lead._id, 'email', 'sent');
@@ -93,7 +114,11 @@ const processNewLead = async (leadId, pageId, io) => {
 
         // 4. Send WhatsApp
         try {
+<<<<<<< HEAD
             if (lead.phone && orgConfig.features.whatsapp) {
+=======
+            if (lead.phone) {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
                 await whatsappService.sendTemplate(lead, orgConfig.whatsapp);
                 lead.status.whatsapp = 'sent';
                 await logger.dbLog(lead._id, 'whatsapp', 'sent');
@@ -109,6 +134,7 @@ const processNewLead = async (leadId, pageId, io) => {
         // Update Admin UI
         if (io) io.emit('update_lead', lead);
 
+<<<<<<< HEAD
         // 5. CRM Sync (Parallel)
         try {
             const [sfResult, hsResult] = await Promise.all([
@@ -124,6 +150,8 @@ const processNewLead = async (leadId, pageId, io) => {
             logger.error('CRM Sync failed', crmErr);
         }
 
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     } catch (err) {
         logger.error(`Failed to process lead ${leadId}`, err);
     }
@@ -141,8 +169,13 @@ const triggerAdvancedFeatures = async (lead, orgConfig) => {
             voiceService.triggerInstantCall(lead, orgConfig).catch(e => logger.error('Voice Call Error', e));
         }
 
+<<<<<<< HEAD
         // 3. Trigger Omni-channel Swarm Workflows (Handled by WorkflowEngine now)
         // automationService.triggerWorkflows('lead_created', lead, orgConfig).catch(e => logger.error('Workflow Error', e));
+=======
+        // 3. Trigger Omni-channel Swarm Workflows
+        automationService.triggerWorkflows('lead_created', lead).catch(e => logger.error('Workflow Error', e));
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 
     } catch (aiError) {
         logger.error('Advanced AI Features encountered an interruption:', aiError);

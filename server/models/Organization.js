@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
+<<<<<<< HEAD
 const encryptionService = require('../services/encryptionService');
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 
 const OrganizationSchema = new mongoose.Schema({
     name: { type: String, required: true },
@@ -64,6 +67,7 @@ const OrganizationSchema = new mongoose.Schema({
     },
     isActive: { type: Boolean, default: true },
 
+<<<<<<< HEAD
     // Feature Flags (Activation Control)
     features: {
         email: { type: Boolean, default: false },
@@ -142,3 +146,9 @@ OrganizationSchema.post('findOne', function (doc) {
 
 module.exports = mongoose.model('Organization', OrganizationSchema);
 
+=======
+    createdAt: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+module.exports = mongoose.model('Organization', OrganizationSchema);
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19

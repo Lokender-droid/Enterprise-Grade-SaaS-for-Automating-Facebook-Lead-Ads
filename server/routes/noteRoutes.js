@@ -2,10 +2,17 @@ const express = require('express');
 const router = express.Router();
 const noteService = require('../services/noteService');
 
+<<<<<<< HEAD
 const authController = require('../controllers/authController');
 
 // Create note
 router.post('/', authController.protect, async (req, res) => {
+=======
+const ensureAuth = (req, res, next) => next(); // Placeholder
+
+// Create note
+router.post('/', ensureAuth, async (req, res) => {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     try {
         const noteData = {
             ...req.body,
@@ -19,7 +26,11 @@ router.post('/', authController.protect, async (req, res) => {
 });
 
 // Get notes for a lead
+<<<<<<< HEAD
 router.get('/lead/:leadId', authController.protect, async (req, res) => {
+=======
+router.get('/lead/:leadId', ensureAuth, async (req, res) => {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     try {
         const notes = await noteService.getNotes(
             req.user.organizationId,
@@ -33,7 +44,11 @@ router.get('/lead/:leadId', authController.protect, async (req, res) => {
 });
 
 // Update note
+<<<<<<< HEAD
 router.put('/:id', authController.protect, async (req, res) => {
+=======
+router.put('/:id', ensureAuth, async (req, res) => {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     try {
         const note = await noteService.updateNote(
             req.user.organizationId,
@@ -48,7 +63,11 @@ router.put('/:id', authController.protect, async (req, res) => {
 });
 
 // Delete note
+<<<<<<< HEAD
 router.delete('/:id', authController.protect, async (req, res) => {
+=======
+router.delete('/:id', ensureAuth, async (req, res) => {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     try {
         const result = await noteService.deleteNote(
             req.user.organizationId,

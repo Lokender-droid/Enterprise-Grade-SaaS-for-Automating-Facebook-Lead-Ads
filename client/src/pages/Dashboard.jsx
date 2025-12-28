@@ -46,7 +46,10 @@ import UserManagement from '../components/UserManagement';
 import AnalyticsCharts from '../components/AnalyticsCharts';
 import AIChatWidget from '../components/AIChatWidget';
 import KanbanBoard from '../components/KanbanBoard';
+<<<<<<< HEAD
 import TeamPerformance from '../components/TeamPerformance';
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 
 const socket = io('http://localhost:4000');
 
@@ -170,6 +173,7 @@ export default function Dashboard() {
         }
     };
 
+<<<<<<< HEAD
     const fetchStages = async () => {
         try {
             const data = await getStages();
@@ -179,6 +183,8 @@ export default function Dashboard() {
         }
     };
 
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     useEffect(() => {
         fetchLeads();
         fetchAnalytics();
@@ -347,6 +353,12 @@ export default function Dashboard() {
                             <Link to="/tasks" className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all">
                                 <CheckCircle className="w-4 h-4" /> <span className="hidden sm:inline">Tasks</span>
                             </Link>
+<<<<<<< HEAD
+=======
+                            <Link to="/workflows" className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all">
+                                <Zap className="w-4 h-4" /> <span className="hidden sm:inline">Workflows</span>
+                            </Link>
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
                             <Link to="/billing" className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all">
                                 <CreditCard className="w-4 h-4" /> <span className="hidden sm:inline">Billing</span>
                             </Link>

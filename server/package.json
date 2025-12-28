@@ -22,16 +22,23 @@
     "mongoose": "^7.6.3",
     "morgan": "^1.10.0",
     "multer": "^2.0.2",
+<<<<<<< HEAD
     "node-cache": "^5.1.2",
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     "nodemailer": "^6.9.7",
     "openai": "^6.15.0",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-microsoft": "^2.1.0",
+<<<<<<< HEAD
     "qrcode": "^1.5.4",
     "socket.io": "^4.7.2",
     "speakeasy": "^2.0.0",
     "twilio": "^5.11.1",
+=======
+    "socket.io": "^4.7.2",
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     "uuid": "^13.0.0",
     "xss-clean": "^0.1.4"
   },

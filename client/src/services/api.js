@@ -316,7 +316,10 @@ export const deleteCustomField = async (id) => {
 };
 
 export const reorderCustomFields = async (orders) => {
+<<<<<<< HEAD
     const { data } = await api.put('/api/custom-fields/reorder/all', { orders });
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     return data;
 };
 

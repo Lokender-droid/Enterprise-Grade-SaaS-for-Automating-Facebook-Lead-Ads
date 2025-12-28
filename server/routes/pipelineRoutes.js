@@ -1,10 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const pipelineService = require('../services/pipelineService');
+<<<<<<< HEAD
 const authController = require('../controllers/authController');
 
 // Get all pipeline stages
 router.get('/stages', authController.protect, async (req, res) => {
+=======
+
+const ensureAuth = (req, res, next) => next(); // Placeholder
+
+// Get all pipeline stages
+router.get('/stages', ensureAuth, async (req, res) => {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     try {
         const stages = await pipelineService.getStages(req.user.organizationId);
         res.json(stages);
@@ -14,7 +22,11 @@ router.get('/stages', authController.protect, async (req, res) => {
 });
 
 // Create stage
+<<<<<<< HEAD
 router.post('/stages', authController.protect, async (req, res) => {
+=======
+router.post('/stages', ensureAuth, async (req, res) => {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     try {
         const stageData = { ...req.body, organizationId: req.user.organizationId };
         const stage = await pipelineService.createStage(stageData);
@@ -25,7 +37,11 @@ router.post('/stages', authController.protect, async (req, res) => {
 });
 
 // Update stage
+<<<<<<< HEAD
 router.put('/stages/:id', authController.protect, async (req, res) => {
+=======
+router.put('/stages/:id', ensureAuth, async (req, res) => {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     try {
         const stage = await pipelineService.updateStage(
             req.user.organizationId,
@@ -39,7 +55,11 @@ router.put('/stages/:id', authController.protect, async (req, res) => {
 });
 
 // Reorder stages
+<<<<<<< HEAD
 router.put('/stages/reorder/all', authController.protect, async (req, res) => {
+=======
+router.put('/stages/reorder/all', ensureAuth, async (req, res) => {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     try {
         const result = await pipelineService.reorderStages(
             req.user.organizationId,
@@ -52,7 +72,11 @@ router.put('/stages/reorder/all', authController.protect, async (req, res) => {
 });
 
 // Move lead to stage
+<<<<<<< HEAD
 router.put('/leads/:leadId/stage', authController.protect, async (req, res) => {
+=======
+router.put('/leads/:leadId/stage', ensureAuth, async (req, res) => {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     try {
         const { stageKey } = req.body;
         const lead = await pipelineService.moveLeadToStage(

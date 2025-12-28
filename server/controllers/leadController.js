@@ -82,8 +82,12 @@ exports.createLead = async (req, res) => {
 
         const org = await Organization.findById(orgId);
 
+<<<<<<< HEAD
 
 
+=======
+        // ⚡ TRIGGER AUTOMATION
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
         // ⚡ TRIGGER ADVANCED AGENTS (Swarm, Voice, Intelligence)
         // Pass the full org object so services can access API keys (vapi, openai)
         leadService.triggerAdvancedFeatures(newLead, org).catch(err => console.error('Enrichment Error:', err));
@@ -252,9 +256,12 @@ exports.createTestLead = async (req, res) => {
         });
 
         // ⚡ TRIGGER AUTOMATION
+<<<<<<< HEAD
         const workflowEngine = require('../services/workflowEngine');
         workflowEngine.trigger('lead_created', { lead: newLead, organizationId: orgId }).catch(err => console.error('Workflow Trigger Error:', err));
 
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
         // ⚡ TRIGGER ADVANCED AGENTS
         leadService.triggerAdvancedFeatures(newLead).catch(err => console.error('Enrichment Error:', err));
 

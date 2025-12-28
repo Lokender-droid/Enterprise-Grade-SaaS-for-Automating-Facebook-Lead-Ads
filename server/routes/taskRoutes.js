@@ -2,16 +2,27 @@ const express = require('express');
 const router = express.Router();
 const taskService = require('../services/taskService');
 
+<<<<<<< HEAD
 const authController = require('../controllers/authController');
 
 // Create task
 router.post('/', authController.protect, async (req, res) => {
+=======
+const ensureAuth = (req, res, next) => next(); // Placeholder
+
+// Create task
+router.post('/', ensureAuth, async (req, res) => {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     try {
         const taskData = {
             ...req.body,
             organizationId: req.user.organizationId
         };
+<<<<<<< HEAD
         const task = await taskService.createTask(taskData, req.user._id, req.io);
+=======
+        const task = await taskService.createTask(taskData, req.user._id);
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
         res.status(201).json(task);
     } catch (error) {
         res.status(400).json({ error: error.message });
@@ -19,7 +30,11 @@ router.post('/', authController.protect, async (req, res) => {
 });
 
 // Get tasks
+<<<<<<< HEAD
 router.get('/', authController.protect, async (req, res) => {
+=======
+router.get('/', ensureAuth, async (req, res) => {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     try {
         const tasks = await taskService.getTasks(
             req.user.organizationId,
@@ -32,7 +47,11 @@ router.get('/', authController.protect, async (req, res) => {
 });
 
 // Get single task
+<<<<<<< HEAD
 router.get('/:id', authController.protect, async (req, res) => {
+=======
+router.get('/:id', ensureAuth, async (req, res) => {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     try {
         const task = await taskService.getTask(
             req.user.organizationId,
@@ -45,7 +64,11 @@ router.get('/:id', authController.protect, async (req, res) => {
 });
 
 // Update task
+<<<<<<< HEAD
 router.put('/:id', authController.protect, async (req, res) => {
+=======
+router.put('/:id', ensureAuth, async (req, res) => {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     try {
         const task = await taskService.updateTask(
             req.user.organizationId,
@@ -60,7 +83,11 @@ router.put('/:id', authController.protect, async (req, res) => {
 });
 
 // Complete task
+<<<<<<< HEAD
 router.put('/:id/complete', authController.protect, async (req, res) => {
+=======
+router.put('/:id/complete', ensureAuth, async (req, res) => {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     try {
         const task = await taskService.completeTask(
             req.user.organizationId,
@@ -74,7 +101,11 @@ router.put('/:id/complete', authController.protect, async (req, res) => {
 });
 
 // Delete task
+<<<<<<< HEAD
 router.delete('/:id', authController.protect, async (req, res) => {
+=======
+router.delete('/:id', ensureAuth, async (req, res) => {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     try {
         const result = await taskService.deleteTask(
             req.user.organizationId,
@@ -88,7 +119,11 @@ router.delete('/:id', authController.protect, async (req, res) => {
 });
 
 // Get stats
+<<<<<<< HEAD
 router.get('/stats/all', authController.protect, async (req, res) => {
+=======
+router.get('/stats/all', ensureAuth, async (req, res) => {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     try {
         const stats = await taskService.getTaskStats(
             req.user.organizationId,

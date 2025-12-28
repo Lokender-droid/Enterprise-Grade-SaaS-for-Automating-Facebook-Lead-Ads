@@ -1,8 +1,11 @@
 const Organization = require('../models/Organization');
 const axios = require('axios');
 const config = require('../config');
+<<<<<<< HEAD
 const ActivityLog = require('../models/ActivityLog');
 const domainService = require('../services/domainService');
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 
 // Get Organization Settings
 exports.getSettings = async (req, res) => {
@@ -97,6 +100,7 @@ exports.updateSettings = async (req, res) => {
                 : req.body.ssoSettings;
         }
 
+<<<<<<< HEAD
         // Handle integrations (verify credentials if connecting)
         if (req.body.integrations) {
             let updates = typeof req.body.integrations === 'string'
@@ -127,6 +131,13 @@ exports.updateSettings = async (req, res) => {
             }
 
             org.integrations = updates;
+=======
+        // Handle integrations
+        if (req.body.integrations) {
+            org.integrations = typeof req.body.integrations === 'string'
+                ? JSON.parse(req.body.integrations)
+                : req.body.integrations;
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
         }
 
         await org.save();
@@ -145,6 +156,7 @@ exports.updateSettings = async (req, res) => {
             }
         }
 
+<<<<<<< HEAD
         // Log Activity
         ActivityLog.create({
             organizationId: req.user.organizationId,
@@ -158,6 +170,8 @@ exports.updateSettings = async (req, res) => {
             userAgent: req.get('user-agent')
         }).catch(err => console.error('[AUDIT-LOG] Failed:', err));
 
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
         res.json({ message: 'Settings updated successfully' });
     } catch (error) {
         console.error('Update settings error:', error);
@@ -230,6 +244,7 @@ exports.autoConfigureWebhooks = async (req, res) => {
 // ============================================
 const domainService = require('../services/domainService');
 
+<<<<<<< HEAD
 // WHITE-LABEL DOMAIN VERIFICATION
 // ============================================
 
@@ -288,10 +303,45 @@ exports.getDNSInstructions = async (req, res) => {
         res.json(instructions);
     } catch (error) {
         console.error('Get DNS instructions error:', error);
+=======
+exports.verifyCustomDomain = async (req, res) => {
+    try {
+        const { customDomain } = req.body;
+        const organizationId = req.user.organizationId;
+
+        if (!customDomain) {
+            return res.status(400).json({ message: 'Custom domain is required' });
+        }
+
+        const result = await domainService.verifyDomain(customDomain, organizationId);
+
+        if (result.success) {
+            res.json({
+                success: true,
+                message: result.message,
+                verified: true
+            });
+        } else {
+            res.status(400).json(result);
+        }
+    } catch (error) {
+        console.error('Verify domain error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
 
+exports.getDNSInstructions = async (req, res) => {
+    try {
+        const { customDomain } = req.query;
+        const instructions = domainService.getDNSInstructions(customDomain);
+        res.json(instructions);
+    } catch (error) {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+<<<<<<< HEAD
 // Check DNS propagation status
 exports.checkPropagationStatus = async (req, res) => {
     try {
@@ -330,6 +380,14 @@ exports.removeCustomDomain = async (req, res) => {
         res.json(result);
     } catch (error) {
         console.error('Remove domain error:', error);
+=======
+exports.removeCustomDomain = async (req, res) => {
+    try {
+        const organizationId = req.user.organizationId;
+        const result = await domainService.removeDomain(organizationId);
+        res.json(result);
+    } catch (error) {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
         res.status(500).json({ message: 'Server error' });
     }
 };

@@ -9,7 +9,12 @@ const TaskSchema = new mongoose.Schema({
 
     leadId: {
         type: mongoose.Schema.Types.ObjectId,
+<<<<<<< HEAD
         ref: 'Lead'
+=======
+        ref: 'Lead',
+        required: true
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     },
 
     // Task Details

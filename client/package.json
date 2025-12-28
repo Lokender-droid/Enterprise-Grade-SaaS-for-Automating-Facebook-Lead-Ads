@@ -18,7 +18,10 @@
         "react-dom": "^18.2.0",
         "react-router-dom": "^6.18.0",
         "reactflow": "^11.11.4",
+<<<<<<< HEAD
         "recharts": "^3.6.0",
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
         "socket.io-client": "^4.7.2"
     },
     "devDependencies": {

@@ -45,6 +45,7 @@ app.use(morgan('dev'));
 app.use(passport.initialize());
 
 // Security Middleware
+<<<<<<< HEAD
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -59,6 +60,9 @@ app.use(helmet({
     },
     crossOriginEmbedderPolicy: false
 }));
+=======
+app.use(helmet()); // Secure HTTP headers
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 app.use(mongoSanitize()); // Prevent NoSQL injection
 app.use(xss()); // Prevent XSS attacks
 
@@ -76,6 +80,7 @@ const authLimiter = rateLimit({
 });
 app.use('/auth', authLimiter);
 
+<<<<<<< HEAD
 // --- WORKFLOW SCHEDULER ---
 const workflowEngine = require('./services/workflowEngine');
 setInterval(() => {
@@ -83,6 +88,8 @@ setInterval(() => {
 }, 60 * 1000); // Check every minute
 
 
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 const webhookLimiter = rateLimit({
     windowMs: 1 * 60 * 1000,
     max: 60 // Allow high throughput for Facebook webhooks
@@ -123,7 +130,10 @@ app.use('/api/enterprise', require('./routes/enterpriseRoutes')); // New Audit/N
 app.use('/api/workflows', require('./routes/workflowRoutes')); // RPA Workflow Route
 app.use('/users', require('./routes/users'));
 app.use('/auth', ssoRoutes); // SSO OAuth Routes
+<<<<<<< HEAD
 app.use('/api/notifications', require('./routes/notificationRoutes')); // New Notification Center
+=======
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 
 // Serve Assets (Brochure)
 app.use('/assets', express.static(path.join(__dirname, '../assets')));

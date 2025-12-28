@@ -1,6 +1,10 @@
 const Workflow = require('../models/Workflow');
+<<<<<<< HEAD
 const { sendWelcomeEmail } = require('./emailService');
 const whatsappService = require('./whatsappService');
+=======
+const { sendEmail } = require('./emailService');
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 const voiceService = require('./voiceService');
 const intelligenceService = require('./intelligenceService');
 const profilingService = require('./profilingService');
@@ -19,7 +23,11 @@ const COOLDOWN_MS = 60000; // 1 minute
 // Delay helper
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+<<<<<<< HEAD
 exports.triggerWorkflows = async (triggerType, data, orgConfig) => {
+=======
+exports.triggerWorkflows = async (triggerType, data) => {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     // 0. Circuit Breaker Check
     if (circuitState.isOpen) {
         if (Date.now() < circuitState.nextTry) {
@@ -48,12 +56,20 @@ exports.triggerWorkflows = async (triggerType, data, orgConfig) => {
 
         if (startNode) {
             console.log(`   ► Starting Workflow: ${w.name}`);
+<<<<<<< HEAD
             await executeWorkflow(graph, startNode, data, orgConfig);
+=======
+            await executeWorkflow(graph, startNode, data);
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
         }
     }
 };
 
+<<<<<<< HEAD
 async function executeWorkflow(graph, startNode, context, orgConfig) {
+=======
+async function executeWorkflow(graph, startNode, context) {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     let currentNode = startNode;
     let steps = 0;
     const MAX_STEPS = 50;
@@ -64,7 +80,11 @@ async function executeWorkflow(graph, startNode, context, orgConfig) {
 
         try {
             // RETRY LOGIC with Exponential Backoff
+<<<<<<< HEAD
             const resultHandle = await executeWithRetry(currentNode, context, orgConfig);
+=======
+            const resultHandle = await executeWithRetry(currentNode, context);
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
 
             // Reset Circuit on success
             circuitState.failures = 0;
@@ -104,10 +124,17 @@ async function executeWorkflow(graph, startNode, context, orgConfig) {
     }
 }
 
+<<<<<<< HEAD
 async function executeWithRetry(node, context, orgConfig, retries = 3) {
     for (let i = 0; i < retries; i++) {
         try {
             return await processNode(node, context, orgConfig);
+=======
+async function executeWithRetry(node, context, retries = 3) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await processNode(node, context);
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
         } catch (err) {
             const isLastAttempt = i === retries - 1;
             console.warn(`         ⚠️ Attempt ${i + 1} failed. ${isLastAttempt ? 'Giving up.' : 'Retrying...'}`);
@@ -117,7 +144,11 @@ async function executeWithRetry(node, context, orgConfig, retries = 3) {
     }
 }
 
+<<<<<<< HEAD
 async function processNode(node, context, orgConfig) {
+=======
+async function processNode(node, context) {
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     const { nodeType, subType, config } = node.data;
 
     // Simulate Failure for testing if configured
@@ -128,6 +159,7 @@ async function processNode(node, context, orgConfig) {
         if (!config?.subject) throw new Error("Missing Email Subject");
 
         const subject = config.subject.replace('{name}', context.name || 'User');
+<<<<<<< HEAD
         const bodyOverride = config.body; // TODO: Pass this to emailService if supported
 
         console.log(`         ✉ SENDING REAL EMAIL to ${context.email} (Subj: ${subject})`);
@@ -138,11 +170,15 @@ async function processNode(node, context, orgConfig) {
         await sendWelcomeEmail(context, orgConfig);
 
         // Wait minor delay to be nice to API limits
+=======
+        console.log(`         ✉ SENDING EMAIL to ${context.email} (Subj: ${subject})`);
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
         await delay(300);
     }
 
     // 2. ACTION: WHATSAPP
     if (nodeType === 'action' && subType === 'whatsapp') {
+<<<<<<< HEAD
         console.log(`         💬 SENDING REAL WHATSAPP to ${context.phone}...`);
 
         if (orgConfig.whatsapp && orgConfig.whatsapp.phoneId && orgConfig.whatsapp.accessToken) {
@@ -150,25 +186,41 @@ async function processNode(node, context, orgConfig) {
         } else {
             console.warn('         ⚠️ WhatsApp Config missing. Skipping.');
         }
+=======
+        console.log(`         💬 SENDING WHATSAPP...`);
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
         await delay(300);
     }
 
     // 3. ACTION: INSTANT VOICE CALL
     if (nodeType === 'action' && subType === 'voice_call') {
+<<<<<<< HEAD
         console.log(`         📞 TRIGGERING REAL VOICE AGENT...`);
         await voiceService.triggerInstantCall(context, orgConfig);
+=======
+        console.log(`         📞 STARTING VOICE AGENT...`);
+        await voiceService.triggerInstantCall(context);
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     }
 
     // 4. ACTION: INTELLIGENCE AGENT (SPY BOT)
     if (nodeType === 'action' && (subType === 'spy_bot' || subType === 'competitor_analysis')) {
         console.log(`         🕵️ RUNNING SPY BOT...`);
+<<<<<<< HEAD
         await intelligenceService.generateBattlecard(context, orgConfig);
+=======
+        await intelligenceService.generateBattlecard(context);
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     }
 
     // 5. ACTION: PROFILING AGENT (DISC)
     if (nodeType === 'action' && subType === 'disc_profile') {
         console.log(`         🧠 ANALYZING PSYCHOLOGY...`);
+<<<<<<< HEAD
         await profilingService.predictDISCProfile(context, orgConfig);
+=======
+        await profilingService.predictDISCProfile(context);
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
     }
 
     // 6. ACTION: REVENUE PREDICTION
@@ -190,6 +242,7 @@ async function processNode(node, context, orgConfig) {
         console.log(`         ❓ CONDITION: ${field}(${actualValue}) ${operator} ${value} ? => ${conditionMet}`);
         return conditionMet ? 'true' : 'false';
     }
+<<<<<<< HEAD
 
     // 8. WAIT
     if (nodeType === 'wait') {
@@ -209,3 +262,6 @@ async function processNode(node, context, orgConfig) {
     }
 }
 
+=======
+}
+>>>>>>> 46429a05d252eab9ad9e75d9fdfa1a3356ceed19
